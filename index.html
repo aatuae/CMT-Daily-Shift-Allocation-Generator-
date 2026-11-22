@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CMT Daily Shift Allocation Generator (v88 - Live Roster)</title>
+<title>CMT Daily Shift Allocation Generator (v89 - Live Roster)</title>
 <!-- SheetJS (XLSX) CDN with fallback -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
@@ -1216,7 +1216,7 @@
       </div>
 
       <div style="margin-left:auto; display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.22); border-radius:6px; padding:6px 12px; line-height:1.35;">
-        <div style="background:#2563eb; color:#ffffff; border:1px solid #60a5fa; border-radius:5px; padding:4px 9px; font-size:12px; font-weight:800; letter-spacing:0.6px; box-shadow:0 1px 3px rgba(0,0,0,0.25);">v88</div>
+        <div style="background:#2563eb; color:#ffffff; border:1px solid #60a5fa; border-radius:5px; padding:4px 9px; font-size:12px; font-weight:800; letter-spacing:0.6px; box-shadow:0 1px 3px rgba(0,0,0,0.25);">v89</div>
         <div style="text-align:right;">
           <div style="font-size:10px; text-transform:uppercase; letter-spacing:0.8px; color:#cbd5e1; font-weight:600;">Created by</div>
           <div style="font-size:13px; font-weight:800; color:#facc15; letter-spacing:0.4px;">ADEEL ASGHAR (497038)</div>
@@ -3834,19 +3834,21 @@
       };
     }
 
-    // Helper: Place Fixed CTO -> 3x3 Cycle Auto-Switch (after 3 off days) & 4x2 AA Cycle Rule -> Unassigned Regular -> Smart Shortage-Balancing OT Staff
+    // Helper: Place Fixed CTO -> Equal Timing & Headcount Split for AA (with 1st->CMT-1 / 2nd->CMT-2 tie-breaker) -> EO Cycle Auto-Switch -> Smart Shortage-Balancing OT Staff
     function distributeEquallyByTiming(staffList) {
       const unassignedRegularByTime = {};
       const regularTimeOrder = [];
       const otStaffList = [];
 
-      // Step 1: Manual Pins, Fixed CTO, 3x3 Cycle Auto-Swap (after 3 off days), and 4x2 AA Rule
+      // Step 1: Manual Pins, Fixed CTO, AA Timing-Balanced Grouping, and EO Cycle Auto-Swap
       staffList.forEach(function(p) {
         // Compute AA screen tag & last duty info if role === 'AA'
         const aaCycleInfo = (p.role === 'AA') ? detect4x2AaCycleInfo(p, colIdx, shiftChoice, activeDateStr) : null;
         if (aaCycleInfo) {
           p.aaTopTag = aaCycleInfo.topLabel;
           p.aaLastDutyText = aaCycleInfo.lastDutyText;
+          p._aaPreferredSide = aaCycleInfo.side; // 'CMT-1' for 1st Morning/Night, 'CMT-2' for 2nd/Last Morning/Night
+          p._aaDayIndex = aaCycleInfo.dayIndex || 1;
         }
 
         const pref = currentPrefs[p.empId];
@@ -3861,24 +3863,25 @@
           return;
         }
 
-        // Keep OT staff separate so they fill shortage gaps first after regular cycle placement
+        // Keep OT staff separate so they fill shortage gaps first after regular placement
         if (p.isOT) {
           otStaffList.push(p);
           return;
         }
 
-        // For 4x2 AA ONLY: 1st Morning -> CMT-1, 2nd Morning -> CMT-2, 1st Night -> CMT-1, 2nd Night -> CMT-2
-        // (3x3 AA uses the 3-day cycle auto-switch below so they stay in the same section for 3 days and flip after 3 off days)
-        if (aaCycleInfo && aaCycleInfo.pattern === '4x2') {
-          if (aaCycleInfo.side === 'CMT-1') {
-            cmt1.push(p);
-          } else {
-            cmt2.push(p);
+        // For AA: Priority #1 is equal split per timing group & total AA headcount across CMT-1 & CMT-2;
+        // Priority #2 (tie-breaker inside each timing group) is 1st Morning/Night -> CMT-1 & 2nd/Last Morning/Night -> CMT-2.
+        if (p.role === 'AA') {
+          const tKeyAa = p.time || 'UNKNOWN';
+          if (!unassignedRegularByTime[tKeyAa]) {
+            unassignedRegularByTime[tKeyAa] = [];
+            regularTimeOrder.push(tKeyAa);
           }
+          unassignedRegularByTime[tKeyAa].push(p);
           return;
         }
 
-        // Check 3x3 / 6-day cycle history (same 3-day cycle = keep side, after 3-day off gap = auto-switch CMT-1 <-> CMT-2)
+        // Check 3x3 / 6-day cycle history for EO (same 3-day cycle = keep side, after 3-day off gap = auto-switch CMT-1 <-> CMT-2)
         const cycleSide = resolveSectionFromCycleHistory(p.empId, activeDateStr, isSeq2Regular, p, colIdx);
         if (cycleSide === 'CMT-1') {
           cmt1.push(p);
@@ -3893,7 +3896,7 @@
           return;
         }
 
-        // First-time staff with no prior cycle record -> distribute 50/50 by exact shift timing
+        // First-time EO with no prior cycle record -> distribute 50/50 by exact shift timing
         const tKey = p.time || 'UNKNOWN';
         if (!unassignedRegularByTime[tKey]) {
           unassignedRegularByTime[tKey] = [];
@@ -3902,18 +3905,68 @@
         unassignedRegularByTime[tKey].push(p);
       });
 
-      // Step 2: Distribute first-time regular staff equally between CMT-1 and CMT-2 by exact timing
+      // Step 2: Distribute regular staff equally between CMT-1 and CMT-2 by exact timing
       regularTimeOrder.forEach(function(tKey) {
         const group = unassignedRegularByTime[tKey];
-        group.forEach(function(p) {
-          const c1RoleCount = cmt1.filter(function(x) { return x.role === p.role; }).length;
-          const c2RoleCount = cmt2.filter(function(x) { return x.role === p.role; }).length;
-          if (c1RoleCount <= c2RoleCount) {
-            cmt1.push(p);
-          } else {
-            cmt2.push(p);
+        if (group.length > 0 && group[0].role === 'AA') {
+          // Priority #1: Equal split inside this timing group (e.g. 3 of 17:00-05:00 -> 2 & 1; 2 of 21:00-09:00 -> 1 & 1)
+          // while keeping total AA count balanced between CMT-1 and CMT-2.
+          // Priority #2 (tie-breaker): 1st Morning/Night prefers CMT-1, 2nd/Last Morning/Night prefers CMT-2.
+          const totalInGroup = group.length;
+          const baseQuota = Math.floor(totalInGroup / 2);
+          const extra = totalInGroup % 2;
+
+          let c1TotalAa = cmt1.filter(function(x) { return x.role === 'AA'; }).length;
+          let c2TotalAa = cmt2.filter(function(x) { return x.role === 'AA'; }).length;
+
+          // Decide which side gets the +1 odd person (if totalInGroup is odd)
+          let c1Quota = baseQuota;
+          let c2Quota = baseQuota;
+          if (extra === 1) {
+            if (c1TotalAa < c2TotalAa) {
+              c1Quota += 1;
+            } else if (c2TotalAa < c1TotalAa) {
+              c2Quota += 1;
+            } else {
+              // Overall AA headcount is equal -> let the preferred side of the group's 1st/2nd Night decide
+              const firstPrefCount = group.filter(function(x) { return x._aaPreferredSide === 'CMT-1'; }).length;
+              const secondPrefCount = group.filter(function(x) { return x._aaPreferredSide === 'CMT-2'; }).length;
+              if (firstPrefCount >= secondPrefCount) c1Quota += 1;
+              else c2Quota += 1;
+            }
           }
-        });
+
+          // Order candidates so 1st Morning/Night (CMT-1 preferred) are picked for CMT-1 slots first,
+          // and 2nd/Last Morning/Night (CMT-2 preferred) are picked for CMT-2 slots first
+          const c1Preferred = group.filter(function(x) { return x._aaPreferredSide === 'CMT-1'; });
+          const c2Preferred = group.filter(function(x) { return x._aaPreferredSide === 'CMT-2'; });
+          const neutralPref = group.filter(function(x) { return x._aaPreferredSide !== 'CMT-1' && x._aaPreferredSide !== 'CMT-2'; });
+
+          const orderedForC1 = c1Preferred.concat(neutralPref, c2Preferred);
+          const assignedSet = new Set();
+
+          for (let i = 0; i < orderedForC1.length && c1Quota > 0; i++) {
+            cmt1.push(orderedForC1[i]);
+            assignedSet.add(orderedForC1[i]);
+            c1Quota--;
+          }
+          group.forEach(function(p) {
+            if (!assignedSet.has(p)) {
+              cmt2.push(p);
+            }
+          });
+        } else {
+          // EO first-time 50/50 split by exact timing
+          group.forEach(function(p) {
+            const c1RoleCount = cmt1.filter(function(x) { return x.role === p.role; }).length;
+            const c2RoleCount = cmt2.filter(function(x) { return x.role === p.role; }).length;
+            if (c1RoleCount <= c2RoleCount) {
+              cmt1.push(p);
+            } else {
+              cmt2.push(p);
+            }
+          });
+        }
       });
 
       // Step 3: Smart OT Balancer (fills whichever side has fewer staff due to leave/shortage first, then splits 50/50!)
