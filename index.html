@@ -314,7 +314,7 @@
     width: 100%;
     table-layout: fixed;
     border-collapse: collapse;
-    font-size: 10px;
+    font-size: 12px;
   }
 
   tr.aa-highlight-row td {
@@ -649,6 +649,15 @@
     font-size: 12px;
     font-weight: 600;
   }
+  #jsb_sign_table tr.aa-highlight-row td,
+  #jsb_sign_table tr.aa-highlight-row .name-text,
+  #jsb_sign_table tr.aa-highlight-row .editable-cell {
+    background-color: #d9d9d9 !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
 
 
   /* PDA Autocomplete & 2-Line Display */
@@ -978,8 +987,17 @@
       padding: 2px 5px !important;
       height: auto !important;
       line-height: 1.15 !important;
-      font-size: 10.5px !important;
+      font-size: 12px !important;
       font-weight: 600 !important;
+    }
+    #jsb_sign_table tr.aa-highlight-row td,
+    #jsb_sign_table tr.aa-highlight-row .name-text,
+    #jsb_sign_table tr.aa-highlight-row .editable-cell {
+      background-color: #d9d9d9 !important;
+      font-size: 12px !important;
+      font-weight: 800 !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
     }
     .jsb-topic-box {
       background: transparent !important;
@@ -1029,7 +1047,7 @@
     .section-block table.alloc-table {
       flex: 1 1 auto !important;
       height: 100% !important;
-      font-size: 10px !important;
+      font-size: 12px !important;
     }
     tr.aa-highlight-row td {
       background-color: #d9d9d9 !important;
@@ -2738,6 +2756,9 @@
             const nameTxt = (cells[2] || '').trim();
             if (!idTxt && !nameTxt) return;
             const tr = document.createElement('tr');
+            if ((idTxt || nameTxt) && String(cells[3] || '').trim().toUpperCase() === 'AA') {
+              tr.classList.add('aa-highlight-row');
+            }
             tr.innerHTML =
               '<td class="col-no">' + (seqNo++) + '.</td>' +
               '<td class="col-id editable-cell" contenteditable="true">' + idTxt + '</td>' +
@@ -4246,6 +4267,9 @@
 
     function addSignRow(empId, name, role) {
       const tr = document.createElement('tr');
+      if ((empId || name) && String(role || '').trim().toUpperCase() === 'AA') {
+        tr.classList.add('aa-highlight-row');
+      }
       tr.innerHTML =
         '<td class="col-no">' + (sr++) + '.</td>' +
         '<td class="col-id editable-cell" contenteditable="true">' + (empId || '') + '</td>' +
@@ -5057,8 +5081,8 @@
       ' <Style ss:ID="sMetaRight"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font ss:FontName="Arial" ss:Size="9.5" ss:Bold="1"/></Style>\n' +
       ' <Style ss:ID="sSecHdr"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font ss:FontName="Arial" ss:Size="11.5" ss:Bold="1" ss:Color="#000000"/><Interior ss:Color="#A6A6A6" ss:Pattern="Solid"/></Style>\n' +
       ' <Style ss:ID="sColHdr"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font ss:FontName="Arial" ss:Size="9" ss:Bold="1"/><Interior ss:Color="#EDEDED" ss:Pattern="Solid"/></Style>\n' +
-      ' <Style ss:ID="sDataCenter"><Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font ss:FontName="Arial" ss:Size="10.5" ss:Bold="1"/></Style>\n' +
-      ' <Style ss:ID="sDataLeft"><Alignment ss:Horizontal="Left" ss:Vertical="Center" ss:Indent="1" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font ss:FontName="Arial" ss:Size="10.5" ss:Bold="1"/></Style>\n' +
+      ' <Style ss:ID="sDataCenter"><Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font ss:FontName="Arial" ss:Size="10.5" ss:Bold="0"/></Style>\n' +
+      ' <Style ss:ID="sDataLeft"><Alignment ss:Horizontal="Left" ss:Vertical="Center" ss:Indent="1" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font ss:FontName="Arial" ss:Size="10.5" ss:Bold="0"/></Style>\n' +
       ' <Style ss:ID="sAaCenter"><Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font ss:FontName="Arial" ss:Size="10.5" ss:Bold="1"/><Interior ss:Color="#D9D9D9" ss:Pattern="Solid"/></Style>\n' +
       ' <Style ss:ID="sAaLeft"><Alignment ss:Horizontal="Left" ss:Vertical="Center" ss:Indent="1" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font ss:FontName="Arial" ss:Size="10.5" ss:Bold="1"/><Interior ss:Color="#D9D9D9" ss:Pattern="Solid"/></Style>\n' +
       ' <Style ss:ID="sFootLbl"><Alignment ss:Horizontal="Left" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font ss:FontName="Arial" ss:Size="9" ss:Bold="1"/><Interior ss:Color="#EDEDED" ss:Pattern="Solid"/></Style>\n' +
@@ -5151,12 +5175,15 @@
       const nmVal = tds[2] ? tds[2].innerText.trim() : '';
       const rlVal = tds[3] ? tds[3].innerText.trim() : '';
       const sgVal = tds[4] ? tds[4].innerText.trim() : '';
+      const isAaSign = (idVal !== '' || nmVal !== '') && rlVal.toUpperCase() === 'AA';
+      const stC = isAaSign ? 'sAaCenter' : 'sDataCenter';
+      const stL = isAaSign ? 'sAaLeft' : 'sDataLeft';
       x += '<Row ss:Height="16">' +
-        makeCell(srVal, 'sDataCenter', 0, srVal ? 'Number' : 'String') +
-        makeCell(idVal, 'sDataCenter', 0) +
-        makeCell(nmVal, 'sDataLeft', 0) +
-        makeCell(rlVal, 'sDataCenter', 0) +
-        makeCell(sgVal, 'sDataCenter', 0) +
+        makeCell(srVal, stC, 0, srVal ? 'Number' : 'String') +
+        makeCell(idVal, stC, 0) +
+        makeCell(nmVal, stL, 0) +
+        makeCell(rlVal, stC, 0) +
+        makeCell(sgVal, stC, 0) +
       '</Row>';
     });
 
@@ -5358,7 +5385,7 @@
 
 
   function applyAaRowStyling() {
-    ['cmt1_body', 'cmt2_body', 'cto_body', 'ldr1_body', 'ldr2_body', 'ldrcto_body', 'shortage_body'].forEach(function(tbId) {
+    ['cmt1_body', 'cmt2_body', 'cto_body', 'ldr1_body', 'ldr2_body', 'ldrcto_body', 'shortage_body', 'jsb_sign_body'].forEach(function(tbId) {
       const tb = document.getElementById(tbId);
       if (!tb) return;
       Array.from(tb.querySelectorAll('tr')).forEach(function(tr) {
