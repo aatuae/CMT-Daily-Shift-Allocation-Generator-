@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CMT Daily Shift Allocation Generator (v89 - Live Roster)</title>
+<title>CMT Daily Shift Allocation Generator (v91 - Roster Month Date Filter)</title>
 <!-- SheetJS (XLSX) CDN with fallback -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
@@ -113,6 +113,33 @@
     color: white;
   }
   .btn-secondary:hover { background: #334155; }
+
+
+  /* Roster Month Date Filter Warning Banner */
+  .date-filter-warning-banner {
+    display: none;
+    background: #fef2f2;
+    border-bottom: 2px solid #dc2626;
+    color: #991b1b;
+    padding: 9px 20px;
+    font-size: 13px;
+    font-weight: 700;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    box-shadow: 0 2px 6px rgba(220, 38, 38, 0.12);
+  }
+  .date-filter-warning-banner.visible {
+    display: flex;
+  }
+  .date-filter-warning-banner .warn-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  @media print {
+    .date-filter-warning-banner { display: none !important; }
+  }
 
   /* Helper Toolbar */
   .sub-toolbar {
@@ -1205,7 +1232,7 @@
       <div class="control-item">
         <label>1. Live Roster / Upload Excel</label>
         <div style="display:flex; gap:6px; align-items:center;">
-          <select id="liveFileSelect" style="display:none; max-width:190px; background:#064e3b; color:#ecfdf5; border-color:#10b981; font-weight:700;" onchange="fetchLiveRosterFromUrl(true, this.value, false)" title="Available Live Monthly Rosters in Google Drive"></select>
+          <select id="liveFileSelect" style="display:none; max-width:190px; background:#064e3b; color:#ecfdf5; border-color:#10b981; font-weight:700;" onchange="switchActiveRosterFileAndDate(this.value, '', NaN)" title="Available Live Monthly Rosters in Google Drive"></select>
           <button type="button" class="btn-success" id="btnSyncLiveRoster" style="background:#059669; white-space:nowrap;" onclick="fetchLiveRosterFromUrl(true)" title="Load latest data from Google Apps Script Live Roster">🔄 Sync Live Roster</button>
           <input type="file" id="excelFile" accept=".xlsx, .xls, .csv" style="max-width:185px;" title="Manual Excel/CSV fallback upload" />
         </div>
@@ -1220,9 +1247,13 @@
 
       <div class="control-item">
         <label>3. Select Date</label>
-        <select id="dateSelect">
-          <option value="">-- Upload File First --</option>
-        </select>
+        <div style="display:flex; gap:5px; align-items:center;">
+          <input type="date" id="datePicker" style="background:#ffffff; color:#0f172a; font-weight:700; min-width:145px; cursor:pointer;" onclick="try{if(this.showPicker)this.showPicker();}catch(e){}" title="Click to open Native Browser Date Picker" />
+          <button type="button" class="btn-secondary" style="padding:7px 9px; font-size:12px; background:#334155;" onclick="openNativeDatePicker()" title="Open Native Calendar Picker">📅</button>
+          <select id="dateSelect" style="display:none;">
+            <option value="">-- Upload File First --</option>
+          </select>
+        </div>
       </div>
 
       <div class="control-item">
@@ -1234,7 +1265,7 @@
       </div>
 
       <div style="margin-left:auto; display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.22); border-radius:6px; padding:6px 12px; line-height:1.35;">
-        <div style="background:#2563eb; color:#ffffff; border:1px solid #60a5fa; border-radius:5px; padding:4px 9px; font-size:12px; font-weight:800; letter-spacing:0.6px; box-shadow:0 1px 3px rgba(0,0,0,0.25);">v89</div>
+        <div style="background:#2563eb; color:#ffffff; border:1px solid #60a5fa; border-radius:5px; padding:4px 9px; font-size:12px; font-weight:800; letter-spacing:0.6px; box-shadow:0 1px 3px rgba(0,0,0,0.25);">v91</div>
         <div style="text-align:right;">
           <div style="font-size:10px; text-transform:uppercase; letter-spacing:0.8px; color:#cbd5e1; font-weight:600;">Created by</div>
           <div style="font-size:13px; font-weight:800; color:#facc15; letter-spacing:0.4px;">ADEEL ASGHAR (497038)</div>
@@ -1271,6 +1302,15 @@
       <button type="button" class="mini-btn" style="padding:4px 8px; font-size:11px;" onclick="addBlankRow('cto_body')">+ Add CTO</button>
       <button type="button" class="mini-btn" style="padding:4px 8px; font-size:11px;" onclick="addBlankRow('shortage_body')">+ Add Shortage</button>
       <button type="button" class="mini-btn mini-btn-shortage" style="padding:4px 8px; font-size:11px; font-weight:700;" onclick="clearSavedForCurrentDateShift()" title="Reset saved edits for this Date and Shift and regenerate fresh from the roster">🗑️ Reset Saved Edits (This Date/Shift)</button>
+    </div>
+  </div>
+
+
+  <!-- Roster Month Date Filter Warning Banner -->
+  <div class="date-filter-warning-banner no-print" id="dateFilterWarningBanner">
+    <span id="dateFilterWarningText">⚠️ Warning: Selected date is outside the currently loaded roster month!</span>
+    <div class="warn-actions">
+      <button type="button" class="mini-btn" style="padding:4px 10px; font-size:11.5px; background:#dc2626; color:#fff; border:none; font-weight:700;" onclick="revertToValidRosterDate()">↩️ Reset to Loaded Roster Date</button>
     </div>
   </div>
 
@@ -2058,6 +2098,38 @@
         // If previous cycle section was found, FLIP it for this new cycle after 3 off days!
         if (prevCycleSection === 'CMT-1') return 'CMT-2';
         if (prevCycleSection === 'CMT-2') return 'CMT-1';
+      }
+    }
+
+    // 1b. Cross-Workbook / Multi-Month Boundary Check (e.g., 29-30 Nov -> 01-03 Dec):
+    // If targetColIdx is near the start of the current month (first 5 date columns), check the previous month's cached workbook!
+    if (patInfo && patInfo.pattern === '3x3' && targetMs !== null && typeof cachedWorkbooksByFile === 'object') {
+      const targetPosInDates = dateColumns.findIndex(function(dc) { return dc.colIdx === targetColIdx; });
+      if (targetPosInDates >= 0 && targetPosInDates <= 5) {
+        const allCachedNames = Object.keys(cachedWorkbooksByFile);
+        for (let fi = 0; fi < allCachedNames.length; fi++) {
+          const prevFileName = allCachedNames[fi];
+          if (prevFileName === currentLiveFileName) continue;
+          const prevCache = cachedWorkbooksByFile[prevFileName];
+          if (!prevCache || !prevCache.buffer || !Array.isArray(prevCache.dates) || prevCache.dates.length === 0) continue;
+          const lastPrevDate = prevCache.dates[prevCache.dates.length - 1];
+          if (lastPrevDate && lastPrevDate.dateMs !== null && lastPrevDate.dateMs < targetMs) {
+            const gapFromPrevMonthEnd = Math.round((targetMs - lastPrevDate.dateMs) / DAY_MS);
+            if (gapFromPrevMonthEnd <= 6) {
+              // Check cycleHistoryByEmp for those last 6 days of previous month
+              const recM = cycleHistoryByEmp[cleanId] || cycleHistoryByEmp[empId];
+              if (recM && Array.isArray(recM.entries)) {
+                for (let ei = recM.entries.length - 1; ei >= 0; ei--) {
+                  const entM = recM.entries[ei];
+                  if (entM.section !== 'CMT-1' && entM.section !== 'CMT-2') continue;
+                  const diffM = Math.round((targetMs - entM.dateMs) / DAY_MS);
+                  if (diffM >= 1 && diffM <= 2) return entM.section;
+                  if (diffM >= 3 && diffM <= 8) return entM.section === 'CMT-1' ? 'CMT-2' : 'CMT-1';
+                }
+              }
+            }
+          }
+        }
       }
     }
 
@@ -2918,17 +2990,79 @@
     });
   }
 
+  // Multi-month in-memory & IndexedDB roster cache
+  const cachedWorkbooksByFile = {}; // { [fileName]: { fileName, buffer, savedAt, dates: [{ colIdx, label, dateOnly, dateMs }] } }
+
+  function extractDatesIndexFromBuffer(arrayBuffer) {
+    try {
+      if (typeof XLSX === 'undefined' || !arrayBuffer) return [];
+      const wb = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array', cellDates: false });
+      const chosenSheetName = wb.SheetNames.find(function(n) {
+        return n.toLowerCase().includes('schedule') || n.includes('2534');
+      }) || wb.SheetNames[0];
+      if (!chosenSheetName) return [];
+      const sheet = wb.Sheets[chosenSheetName];
+      const rawGrid = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: true });
+      const textGrid = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
+      if (!rawGrid || rawGrid.length === 0) return [];
+
+      let headerRowIdx = 0;
+      let bestScore = -1;
+      for (let i = 0; i < Math.min(25, rawGrid.length); i++) {
+        const rRaw = rawGrid[i] || [];
+        const rTxt = textGrid[i] || [];
+        let score = 0;
+        let dateCount = 0;
+        for (let c = 0; c < rRaw.length; c++) {
+          const formatted = formatHeaderCell(rRaw[c], rTxt[c]);
+          const upper = formatted.toUpperCase();
+          if (upper.includes('EMPLOYEE') || upper.includes('STAFF') || upper.includes('EMP') || upper.includes('ID')) score += 3;
+          if (upper.includes('NAME')) score += 3;
+          if (isLikelyDateHeader(formatted)) { dateCount++; score += 2; }
+        }
+        if (dateCount >= 3) score += 10;
+        if (score > bestScore) { bestScore = score; headerRowIdx = i; }
+      }
+
+      const headerRaw = rawGrid[headerRowIdx] || [];
+      const headerTxt = textGrid[headerRowIdx] || [];
+      const list = [];
+      for (let c = 0; c < Math.max(headerRaw.length, headerTxt.length); c++) {
+        const label = formatHeaderCell(headerRaw[c], headerTxt[c]);
+        if (isLikelyDateHeader(label)) {
+          const dMatch = label.match(/(\d{1,2}[-/]\d{1,2}[-/]\d{2,4}|\d{4}[-/]\d{1,2}[-/]\d{1,2})/);
+          const dateOnly = dMatch ? dMatch[1] : label;
+          const dateMs = parseDateStrToMs(dateOnly);
+          list.push({ colIdx: c, label: label, dateOnly: dateOnly, dateMs: dateMs });
+        }
+      }
+      return list;
+    } catch (e) {
+      return [];
+    }
+  }
+
   function saveRosterFileToIndexedDB(fileName, arrayBuffer) {
+    const cleanName = String(fileName || 'current_roster').trim();
+    const datesIdx = extractDatesIndexFromBuffer(arrayBuffer);
+    cachedWorkbooksByFile[cleanName] = {
+      fileName: cleanName,
+      buffer: arrayBuffer,
+      savedAt: new Date().toISOString(),
+      dates: datesIdx
+    };
+
     return openRosterIndexedDB().then(function(db) {
       return new Promise(function(resolve, reject) {
         const tx = db.transaction(ROSTER_STORE_NAME, 'readwrite');
         const store = tx.objectStore(ROSTER_STORE_NAME);
-        // Overwrites the previous roster file cleanly
-        store.put({
-          fileName: fileName,
+        const record = {
+          fileName: cleanName,
           buffer: arrayBuffer,
           savedAt: new Date().toISOString()
-        }, 'current_roster');
+        };
+        store.put(record, 'current_roster');
+        store.put(record, 'file__' + cleanName);
         tx.oncomplete = function() { resolve(); };
         tx.onerror = function(e) { reject(e.target.error); };
       });
@@ -2937,22 +3071,122 @@
     });
   }
 
-  function loadRosterFileFromIndexedDB() {
+  function loadAllRosterFilesFromIndexedDB() {
     return openRosterIndexedDB().then(function(db) {
       return new Promise(function(resolve, reject) {
         const tx = db.transaction(ROSTER_STORE_NAME, 'readonly');
         const store = tx.objectStore(ROSTER_STORE_NAME);
-        const req = store.get('current_roster');
-        req.onsuccess = function() { resolve(req.result || null); };
-        req.onerror = function(e) { reject(e.target.error); };
+        const reqKeys = store.getAllKeys();
+        reqKeys.onsuccess = function() {
+          const keys = reqKeys.result || [];
+          const fileKeys = keys.filter(function(k) { return String(k).startsWith('file__'); });
+          if (fileKeys.length === 0) {
+            const reqCur = store.get('current_roster');
+            reqCur.onsuccess = function() {
+              const res = reqCur.result;
+              if (res && res.buffer) {
+                const fname = res.fileName || 'Saved_Roster.xlsx';
+                cachedWorkbooksByFile[fname] = {
+                  fileName: fname,
+                  buffer: res.buffer,
+                  savedAt: res.savedAt || '',
+                  dates: extractDatesIndexFromBuffer(res.buffer)
+                };
+              }
+              resolve(res || null);
+            };
+            reqCur.onerror = function() { resolve(null); };
+            return;
+          }
+          let pending = fileKeys.length;
+          let latestRec = null;
+          fileKeys.forEach(function(fk) {
+            const r = store.get(fk);
+            r.onsuccess = function() {
+              const rec = r.result;
+              if (rec && rec.buffer) {
+                const fname = rec.fileName || String(fk).replace(/^file__/, '');
+                cachedWorkbooksByFile[fname] = {
+                  fileName: fname,
+                  buffer: rec.buffer,
+                  savedAt: rec.savedAt || '',
+                  dates: extractDatesIndexFromBuffer(rec.buffer)
+                };
+                if (!latestRec || (rec.savedAt && rec.savedAt > (latestRec.savedAt || ''))) {
+                  latestRec = rec;
+                }
+              }
+              pending--;
+              if (pending === 0) resolve(latestRec);
+            };
+            r.onerror = function() {
+              pending--;
+              if (pending === 0) resolve(latestRec);
+            };
+          });
+        };
+        reqKeys.onerror = function() { resolve(null); };
       });
     }).catch(function() {
       return null;
     });
   }
 
+  function loadRosterFileFromIndexedDB() {
+    return loadAllRosterFilesFromIndexedDB();
+  }
+
+  async function switchActiveRosterFileAndDate(targetFileName, targetDateOnly, targetColIdx) {
+    if (!targetFileName) return false;
+    const statusEl = document.getElementById('statusText');
+    const liveSel = document.getElementById('liveFileSelect');
+
+    if (targetDateOnly) {
+      savedLastSession.dateOnly = targetDateOnly;
+      userManuallyChangedDateOrShift = true;
+    }
+
+    // 1. Check in-memory / IndexedDB multi-file cache first (instant switch without re-download!)
+    let cached = cachedWorkbooksByFile[targetFileName];
+    if (!cached) {
+      await loadAllRosterFilesFromIndexedDB();
+      cached = cachedWorkbooksByFile[targetFileName];
+    }
+
+    if (cached && cached.buffer) {
+      currentLiveFileName = targetFileName;
+      if (liveSel) {
+        for (let i = 0; i < liveSel.options.length; i++) {
+          if (liveSel.options[i].value === targetFileName) {
+            liveSel.selectedIndex = i;
+            break;
+          }
+        }
+      }
+      loadWorkbookFromBuffer(cached.buffer, targetFileName, true);
+      if (statusEl) {
+        statusEl.innerText = '⚡ Auto-Switched to "' + targetFileName + '" for ' + (targetDateOnly || 'selected date') + ' (' + parsedRows.length + ' staff)';
+      }
+      return true;
+    }
+
+    // 2. Otherwise fetch that month's file from Google Drive Apps Script & cache it
+    return await fetchLiveRosterFromUrl(false, targetFileName, false);
+  }
+
   function loadWorkbookFromBuffer(arrayBuffer, fileName, preserveCurrentSelection) {
     if (typeof XLSX === 'undefined') return false;
+    const cleanFileName = String(fileName || currentLiveFileName || 'Roster.xlsx').trim();
+    currentLiveFileName = cleanFileName;
+    if (!cachedWorkbooksByFile[cleanFileName]) {
+      cachedWorkbooksByFile[cleanFileName] = {
+        fileName: cleanFileName,
+        buffer: arrayBuffer,
+        savedAt: new Date().toISOString(),
+        dates: extractDatesIndexFromBuffer(arrayBuffer)
+      };
+    }
+
     const data = new Uint8Array(arrayBuffer);
     workbook = XLSX.read(data, { type: 'array', cellDates: false });
 
@@ -2985,7 +3219,7 @@
     }
 
     parseSelectedSheet(true);
-    saveActiveSessionState({ fileName: fileName });
+    saveActiveSessionState({ fileName: cleanFileName });
     return true;
   }
 
@@ -3075,8 +3309,188 @@
     saveActiveSessionState();
     parseSelectedSheet(true);
   });
-  document.getElementById('dateSelect').addEventListener('change', function() {
+  function dateOnlyToIso(dateStr) {
+    if (!dateStr) return '';
+    const s = String(dateStr).trim();
+    let m = s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+    if (m) return m[1] + '-' + m[2].padStart(2, '0') + '-' + m[3].padStart(2, '0');
+    m = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+    if (m) return m[3] + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0');
+    m = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{2})(?!\d)/);
+    if (m) return '20' + m[3] + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0');
+    const months = { jan:'01', feb:'02', mar:'03', apr:'04', may:'05', jun:'06', jul:'07', aug:'08', sep:'09', oct:'10', nov:'11', dec:'12' };
+    m = s.match(/(\d{1,2})[-/ ](Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[-/ ](\d{2,4})/i);
+    if (m) {
+      let y = m[3].length === 2 ? ('20' + m[3]) : m[3];
+      return y + '-' + months[m[2].toLowerCase()] + '-' + m[1].padStart(2, '0');
+    }
+    return '';
+  }
+
+  function isoToDDMMYYYY(isoStr) {
+    const m = String(isoStr || '').trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return '';
+    return m[3] + '-' + m[2] + '-' + m[1];
+  }
+
+  function hideDateFilterWarning() {
+    const banner = document.getElementById('dateFilterWarningBanner');
+    if (banner) banner.classList.remove('visible');
+    const picker = document.getElementById('datePicker');
+    if (picker) {
+      picker.style.borderColor = '#475569';
+      picker.style.background = '#ffffff';
+      picker.style.color = '#0f172a';
+    }
+  }
+
+  function showDateFilterWarning(msg) {
+    const banner = document.getElementById('dateFilterWarningBanner');
+    const txt = document.getElementById('dateFilterWarningText');
+    if (txt) txt.innerText = msg;
+    if (banner) banner.classList.add('visible');
+    const picker = document.getElementById('datePicker');
+    if (picker) {
+      picker.style.borderColor = '#dc2626';
+      picker.style.background = '#fee2e2';
+      picker.style.color = '#991b1b';
+    }
+    const st = document.getElementById('statusText');
+    if (st) {
+      st.style.color = '#dc2626';
+      st.innerText = msg;
+    }
+  }
+
+  function getLoadedRosterAllowedRangeInfo() {
+    const dateSelect = document.getElementById('dateSelect');
+    const validIsos = [];
+    const loadedMonthsSet = new Set();
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    if (dateSelect) {
+      Array.from(dateSelect.options).forEach(function(opt) {
+        if (!opt.value && opt.value !== '0') return;
+        const dOnly = (opt.dataset.dateOnly || opt.textContent || '').trim();
+        const iso = dateOnlyToIso(dOnly);
+        if (iso) {
+          validIsos.push(iso);
+          const parts = iso.split('-');
+          const mIdx = parseInt(parts[1], 10) - 1;
+          if (mIdx >= 0 && mIdx < 12) {
+            loadedMonthsSet.add(monthNames[mIdx] + ' ' + parts[0]);
+          }
+        }
+      });
+    }
+    validIsos.sort();
+    return {
+      validIsos: validIsos,
+      minIso: validIsos.length ? validIsos[0] : '',
+      maxIso: validIsos.length ? validIsos[validIsos.length - 1] : '',
+      monthsLabel: Array.from(loadedMonthsSet).join(' & ')
+    };
+  }
+
+  function applyRosterDateBoundsToPicker() {
+    const picker = document.getElementById('datePicker');
+    if (!picker) return;
+    const rangeInfo = getLoadedRosterAllowedRangeInfo();
+    if (rangeInfo.minIso && rangeInfo.maxIso) {
+      picker.min = rangeInfo.minIso;
+      picker.max = rangeInfo.maxIso;
+    } else {
+      picker.removeAttribute('min');
+      picker.removeAttribute('max');
+    }
+  }
+
+  function revertToValidRosterDate() {
+    hideDateFilterWarning();
+    syncNativePickerFromDateSelect();
+    generateSheet();
+  }
+
+  function syncNativePickerFromDateSelect() {
+    const dateSelect = document.getElementById('dateSelect');
+    const picker = document.getElementById('datePicker');
+    if (!dateSelect || !picker) return;
+    applyRosterDateBoundsToPicker();
+    const opt = dateSelect.selectedOptions && dateSelect.selectedOptions[0];
+    const dStr = opt ? (opt.dataset.dateOnly || opt.textContent || '') : '';
+    const iso = dateOnlyToIso(dStr);
+    if (iso) {
+      picker.value = iso;
+      hideDateFilterWarning();
+    }
+  }
+
+  function openNativeDatePicker() {
+    const picker = document.getElementById('datePicker');
+    if (!picker) return;
+    picker.focus();
+    try {
+      if (typeof picker.showPicker === 'function') {
+        picker.showPicker();
+      } else {
+        picker.click();
+      }
+    } catch (e) {
+      picker.click();
+    }
+  }
+
+  document.getElementById('datePicker').addEventListener('change', function() {
+    const isoVal = this.value; // YYYY-MM-DD
+    if (!isoVal) return;
+    const ddmmyyyy = isoToDDMMYYYY(isoVal);
+    const slashStr = ddmmyyyy.replace(/-/g, '/');
+    const dateSelect = document.getElementById('dateSelect');
+    if (!dateSelect) return;
+
+    let matchedIdx = -1;
+    Array.from(dateSelect.options).forEach(function(opt, idx) {
+      if (matchedIdx !== -1) return;
+      const dOnly = (opt.dataset.dateOnly || '').trim();
+      const lbl = (opt.textContent || '').trim();
+      if (dateOnlyToIso(dOnly) === isoVal || dOnly === ddmmyyyy || dOnly === slashStr || dOnly === isoVal || lbl.includes(ddmmyyyy) || lbl.includes(isoVal)) {
+        matchedIdx = idx;
+      }
+    });
+
+    if (matchedIdx !== -1) {
+      hideDateFilterWarning();
+      dateSelect.selectedIndex = matchedIdx;
+      dateSelect.dispatchEvent(new Event('change'));
+    } else {
+      const rangeInfo = getLoadedRosterAllowedRangeInfo();
+      const loadedInfoTxt = rangeInfo.monthsLabel
+        ? ('Currently loaded roster is only for ' + rangeInfo.monthsLabel + ' (' + isoToDDMMYYYY(rangeInfo.minIso) + ' to ' + isoToDDMMYYYY(rangeInfo.maxIso) + ').')
+        : 'Please upload or sync a roster file first.';
+      const warnMsg = '⚠️ Warning: Date ' + ddmmyyyy + ' cannot be selected! ' + loadedInfoTxt + ' Load the next month\'s roster first to select its dates.';
+      showDateFilterWarning(warnMsg);
+      alert(warnMsg);
+      // Revert date input back to the currently valid loaded roster date so only loaded month dates remain active
+      const prevOpt = dateSelect.selectedOptions && dateSelect.selectedOptions[0];
+      const prevIso = prevOpt ? dateOnlyToIso(prevOpt.dataset.dateOnly || prevOpt.textContent || '') : '';
+      if (prevIso) {
+        this.value = prevIso;
+      } else {
+        this.value = '';
+      }
+    }
+  });
+
+  document.getElementById('dateSelect').addEventListener('change', async function() {
     userManuallyChangedDateOrShift = true;
+    syncNativePickerFromDateSelect();
+    const selOpt = this.selectedOptions && this.selectedOptions[0];
+    const targetFile = selOpt && selOpt.dataset.sourceFile ? selOpt.dataset.sourceFile : '';
+    const targetDateOnly = selOpt && selOpt.dataset.dateOnly ? selOpt.dataset.dateOnly : '';
+    if (targetFile && currentLiveFileName && targetFile !== currentLiveFileName) {
+      await switchActiveRosterFileAndDate(targetFile, targetDateOnly, parseInt(this.value, 10));
+      return;
+    }
     saveActiveSessionState();
     generateSheet();
   });
@@ -3254,7 +3668,17 @@
       }
     }
 
-    // Populate Date Dropdown
+    // Update active file's date index in multi-month cache
+    if (currentLiveFileName) {
+      if (!cachedWorkbooksByFile[currentLiveFileName]) {
+        cachedWorkbooksByFile[currentLiveFileName] = { fileName: currentLiveFileName, buffer: null, savedAt: new Date().toISOString(), dates: [] };
+      }
+      cachedWorkbooksByFile[currentLiveFileName].dates = dateColumns.map(function(d) {
+        return { colIdx: d.colIdx, label: d.label, dateOnly: d.dateOnly, dateMs: parseDateStrToMs(d.dateOnly) };
+      });
+    }
+
+    // Populate Unified Multi-Month Date Dropdown
     const dateSelect = document.getElementById('dateSelect');
     dateSelect.innerHTML = '';
     if (dateColumns.length === 0) {
@@ -3267,15 +3691,57 @@
       return;
     }
 
+    // Combine dates from active file + any other cached month files (e.g. Nov + Dec together)
+    const unifiedDateEntries = [];
+    const seenDateKeys = new Set();
+
+    dateColumns.forEach(function(d) {
+      const key = (d.dateOnly || d.label).trim();
+      seenDateKeys.add(key);
+      unifiedDateEntries.push({
+        colIdx: d.colIdx,
+        label: d.label,
+        dateOnly: d.dateOnly,
+        dateMs: parseDateStrToMs(d.dateOnly),
+        sourceFile: currentLiveFileName || ''
+      });
+    });
+
+    Object.keys(cachedWorkbooksByFile).forEach(function(fKey) {
+      if (fKey === currentLiveFileName) return;
+      const entryObj = cachedWorkbooksByFile[fKey];
+      if (!entryObj || !Array.isArray(entryObj.dates)) return;
+      const shortTag = fKey.replace(/\.xlsx$/i, '').replace(/Roster|Cargo|ULD|_/gi, ' ').trim();
+      entryObj.dates.forEach(function(d) {
+        const key = (d.dateOnly || d.label).trim();
+        if (seenDateKeys.has(key)) return;
+        seenDateKeys.add(key);
+        unifiedDateEntries.push({
+          colIdx: d.colIdx,
+          label: d.label + (shortTag ? ' [' + shortTag + ']' : ''),
+          dateOnly: d.dateOnly,
+          dateMs: d.dateMs !== null ? d.dateMs : parseDateStrToMs(d.dateOnly),
+          sourceFile: fKey
+        });
+      });
+    });
+
+    // Sort chronologically if valid timestamps exist
+    unifiedDateEntries.sort(function(a, b) {
+      if (a.dateMs !== null && b.dateMs !== null) return a.dateMs - b.dateMs;
+      return 0;
+    });
+
     let selectedDateIdx = -1;
     const desiredDate = userManuallyChangedDateOrShift ? (savedLastSession.dateOnly || '').trim() : '';
     const liveNowInfo = getCurrentLiveShiftAndDate();
 
-    dateColumns.forEach(function(d, idx) {
+    unifiedDateEntries.forEach(function(d, idx) {
       const opt = document.createElement('option');
       opt.value = d.colIdx;
       opt.textContent = d.label;
       opt.dataset.dateOnly = d.dateOnly;
+      if (d.sourceFile) opt.dataset.sourceFile = d.sourceFile;
       dateSelect.appendChild(opt);
 
       if (desiredDate && (d.dateOnly === desiredDate || d.label.includes(desiredDate))) {
@@ -3285,7 +3751,7 @@
 
     // Auto-select current live operational date based on 05:00-17:00 (Morning) & 17:00-05:00 (Night) window
     if (selectedDateIdx === -1) {
-      dateColumns.forEach(function(d, idx) {
+      unifiedDateEntries.forEach(function(d, idx) {
         if (selectedDateIdx === -1 && (
           d.dateOnly.includes(liveNowInfo.dateDDMMYYYY) ||
           d.dateOnly.includes(liveNowInfo.dateSlash) ||
@@ -3300,19 +3766,21 @@
     // Fallback to saved session date if today's date isn't in this workbook
     if (selectedDateIdx === -1 && savedLastSession.dateOnly) {
       const fallbackSaved = savedLastSession.dateOnly.trim();
-      dateColumns.forEach(function(d, idx) {
+      unifiedDateEntries.forEach(function(d, idx) {
         if (selectedDateIdx === -1 && (d.dateOnly === fallbackSaved || d.label.includes(fallbackSaved))) {
           selectedDateIdx = idx;
         }
       });
     }
 
-    // Fallback if neither saved date nor today's date is in the uploaded sheet: pick first available date
+    // Fallback if neither saved date nor today's date is in the uploaded sheet: pick first date of active file
     if (selectedDateIdx === -1) {
-      selectedDateIdx = 0;
+      const firstActiveIdx = unifiedDateEntries.findIndex(function(d) { return !d.sourceFile || d.sourceFile === currentLiveFileName; });
+      selectedDateIdx = firstActiveIdx !== -1 ? firstActiveIdx : 0;
     }
 
     dateSelect.selectedIndex = selectedDateIdx;
+    syncNativePickerFromDateSelect();
     saveActiveSessionState();
 
     // Parse staff rows
@@ -6496,10 +6964,12 @@
       if (liveFileSel && Array.isArray(list) && list.length > 0) {
         liveFileSel.innerHTML = '';
         list.forEach(function(fItem) {
+          const fname = (typeof fItem === 'string') ? fItem : (fItem && (fItem.name || fItem.fileName || fItem.title) ? String(fItem.name || fItem.fileName || fItem.title) : '');
+          if (!fname) return;
           const opt = document.createElement('option');
-          opt.value = fItem.name;
-          opt.textContent = '📅 ' + fItem.name.replace(/\.xlsx$/i, '');
-          if (selectedName && fItem.name === selectedName) opt.selected = true;
+          opt.value = fname;
+          opt.textContent = '📅 ' + fname.replace(/\.xlsx$/i, '');
+          if (selectedName && fname === selectedName) opt.selected = true;
           liveFileSel.appendChild(opt);
         });
         liveFileSel.style.display = list.length > 1 ? 'inline-block' : 'none';
@@ -6776,18 +7246,45 @@
           saveAvailableLiveFilesList(payload.availableFiles);
           liveFileSel.innerHTML = '';
           payload.availableFiles.forEach(function(fItem) {
+            const fname = (typeof fItem === 'string') ? fItem : (fItem && (fItem.name || fItem.fileName || fItem.title) ? String(fItem.name || fItem.fileName || fItem.title) : '');
+            if (!fname) return;
             const opt = document.createElement('option');
-            opt.value = fItem.name;
-            opt.textContent = '📅 ' + fItem.name.replace(/\.xlsx$/i, '');
-            if (fItem.name === currentLiveFileName) opt.selected = true;
+            opt.value = fname;
+            opt.textContent = '📅 ' + fname.replace(/\.xlsx$/i, '');
+            if (fname === currentLiveFileName) opt.selected = true;
             liveFileSel.appendChild(opt);
           });
           liveFileSel.style.display = payload.availableFiles.length > 1 ? 'inline-block' : 'none';
         }
 
         const arrayBuf = base64ToArrayBuffer(payload.data);
-        saveRosterFileToIndexedDB(currentLiveFileName, arrayBuf);
+        await saveRosterFileToIndexedDB(currentLiveFileName, arrayBuf);
         setLastLiveFetchTimestamp(Date.now());
+
+        // Background-cache any other available monthly files (e.g. December2026.xlsx alongside November2026.xlsx) so unified dates work offline & switch instantly!
+        if (Array.isArray(payload.availableFiles) && payload.availableFiles.length > 1) {
+          const otherFiles = payload.availableFiles.map(function(fItem) {
+            return (typeof fItem === 'string') ? fItem : (fItem && (fItem.name || fItem.fileName || fItem.title) ? String(fItem.name || fItem.fileName || fItem.title) : '');
+          }).filter(function(fn) { return fn && fn !== currentLiveFileName; });
+
+          for (let oi = 0; oi < otherFiles.length; oi++) {
+            const otherName = otherFiles[oi];
+            try {
+              const oUrl = LIVE_ROSTER_SCRIPT_URL + sep + 'file=' + encodeURIComponent(otherName) + '&_t=' + Date.now();
+              const oResp = await fetch(oUrl, { redirect: 'follow' });
+              if (oResp.ok) {
+                const oJson = await oResp.json();
+                if (oJson && oJson.status === 'success' && typeof oJson.data === 'string' && oJson.data.length > 50) {
+                  const oBuf = base64ToArrayBuffer(oJson.data);
+                  await saveRosterFileToIndexedDB(otherName, oBuf);
+                }
+              }
+            } catch (bgErr) {
+              console.warn('Background cache skip for ' + otherName + ':', bgErr);
+            }
+          }
+        }
+
         loadWorkbookFromBuffer(arrayBuf, currentLiveFileName, !!workbook || isManualClick);
 
         const timeTag = formatLiveTimestamp(currentLiveLastUpdated);
@@ -6885,6 +7382,8 @@
     isRestoringRosterFromStorage = true;
     const initialLiveInfo = getCurrentLiveShiftAndDate();
     document.getElementById('shiftSelect').value = initialLiveInfo.shiftChoice;
+    const initPicker = document.getElementById('datePicker');
+    if (initPicker && initialLiveInfo.dateISO) initPicker.value = initialLiveInfo.dateISO;
 
     // 1. Check cached roster in IndexedDB first
     const cachedRecord = await loadRosterFileFromIndexedDB();
