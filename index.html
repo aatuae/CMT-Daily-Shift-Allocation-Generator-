@@ -314,23 +314,23 @@
     width: 100%;
     table-layout: fixed;
     border-collapse: collapse;
-    font-size: 12px;
+    font-size: 11px;
   }
 
   tr.aa-highlight-row td {
     background-color: #d9d9d9 !important;
-    font-size: 12px !important;
+    font-size: 11px !important;
     font-weight: 800 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
   tr.aa-highlight-row td.col-time {
-    font-size: 12px !important;
+    font-size: 11px !important;
   }
   tr.aa-highlight-row .name-text,
   tr.aa-highlight-row .editable-cell,
   tr.aa-highlight-row .pda-num-edit {
-    font-size: 12px !important;
+    font-size: 11px !important;
     font-weight: 800 !important;
   }
 
@@ -395,7 +395,7 @@
   .col-loc { width: 15%; text-align: center; font-weight: 600; }
   .col-rem { width: 17%; text-align: center; }
   .col-rem-shortage { width: 32%; text-align: center; }
-  .col-time { width: 13.5%; text-align: center; font-weight: 600; font-size: 12px; }
+  .col-time { width: 13.5%; text-align: center; font-weight: 600; font-size: 11px; }
 
   .editable-cell {
     outline: none;
@@ -1047,11 +1047,11 @@
     .section-block table.alloc-table {
       flex: 1 1 auto !important;
       height: 100% !important;
-      font-size: 12px !important;
+      font-size: 11px !important;
     }
     tr.aa-highlight-row td {
       background-color: #d9d9d9 !important;
-      font-size: 12px !important;
+      font-size: 11px !important;
       font-weight: 800 !important;
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
@@ -1060,7 +1060,7 @@
     tr.aa-highlight-row .name-text,
     tr.aa-highlight-row .editable-cell,
     tr.aa-highlight-row .pda-num-edit {
-      font-size: 12px !important;
+      font-size: 11px !important;
     }
     table.alloc-table th {
       padding: 0.5px 3px !important;
@@ -1206,7 +1206,7 @@
         <label>1. Live Roster / Upload Excel</label>
         <div style="display:flex; gap:6px; align-items:center;">
           <select id="liveFileSelect" style="display:none; max-width:190px; background:#064e3b; color:#ecfdf5; border-color:#10b981; font-weight:700;" onchange="fetchLiveRosterFromUrl(true, this.value, false)" title="Available Live Monthly Rosters in Google Drive"></select>
-          <button type="button" class="btn-success" id="btnSyncLiveRoster" style="background:#059669; white-space:nowrap;" onclick="fetchLiveRosterFromUrl(true)" title="Google Apps Script Live Roster se latest data load karein">🔄 Sync Live Roster</button>
+          <button type="button" class="btn-success" id="btnSyncLiveRoster" style="background:#059669; white-space:nowrap;" onclick="fetchLiveRosterFromUrl(true)" title="Load latest data from Google Apps Script Live Roster">🔄 Sync Live Roster</button>
           <input type="file" id="excelFile" accept=".xlsx, .xls, .csv" style="max-width:185px;" title="Manual Excel/CSV fallback upload" />
         </div>
       </div>
@@ -1255,13 +1255,13 @@
 
   <!-- Sub-Toolbar -->
   <div class="sub-toolbar">
-    <div class="status-badge" id="statusText">Ready: Apni Roster Excel file upload karein</div>
+    <div class="status-badge" id="statusText">Ready: Upload your Roster Excel file or sync Live Roster</div>
     <div class="controls-group" style="gap:8px;">
-      <label style="display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700; background:#fff; padding:3px 7px; border:1px solid #94a3b8; border-radius:4px; cursor:pointer;" title="PDA number ke neeche Mobile Number show/hide karein">
+      <label style="display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700; background:#fff; padding:3px 7px; border:1px solid #94a3b8; border-radius:4px; cursor:pointer;" title="Show or hide Mobile Number below the PDA number">
         <input type="checkbox" id="chkShowPdaPhone" checked onchange="togglePdaPhoneDisplay()">
         <span>📱 Show PDA Mobile</span>
       </label>
-      <label style="display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700; background:#fff; padding:3px 7px; border:1px solid #94a3b8; border-radius:4px; cursor:pointer;" title="PDA STAND BY row mein unallocated PDAs small text mein auto-show/hide karein">
+      <label style="display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700; background:#fff; padding:3px 7px; border:1px solid #94a3b8; border-radius:4px; cursor:pointer;" title="Auto-show or hide unallocated PDAs in small text inside the PDA STAND BY row">
         <input type="checkbox" id="chkShowPdaStandby" checked onchange="togglePdaStandbyDisplay()">
         <span>📟 Auto PDA Stand By</span>
       </label>
@@ -1270,7 +1270,7 @@
       <button type="button" class="mini-btn" style="padding:4px 8px; font-size:11px;" onclick="addBlankRow('cmt2_body')">+ Add CMT-2</button>
       <button type="button" class="mini-btn" style="padding:4px 8px; font-size:11px;" onclick="addBlankRow('cto_body')">+ Add CTO</button>
       <button type="button" class="mini-btn" style="padding:4px 8px; font-size:11px;" onclick="addBlankRow('shortage_body')">+ Add Shortage</button>
-      <button type="button" class="mini-btn mini-btn-shortage" style="padding:4px 8px; font-size:11px; font-weight:700;" onclick="clearSavedForCurrentDateShift()" title="Is Date aur Shift ke saved edits reset karke fresh roster se dobara generate karein">🗑️ Reset Saved Edits (This Date/Shift)</button>
+      <button type="button" class="mini-btn mini-btn-shortage" style="padding:4px 8px; font-size:11px; font-weight:700;" onclick="clearSavedForCurrentDateShift()" title="Reset saved edits for this Date and Shift and regenerate fresh from the roster">🗑️ Reset Saved Edits (This Date/Shift)</button>
     </div>
   </div>
 
@@ -1278,7 +1278,7 @@
   <div class="modal-overlay" id="areaModal">
     <div class="modal-box">
       <h3>Select Work Areas (TeamIDs) to Include</h3>
-      <p style="font-size:12px; color:#475569; margin-top:-6px;">Aapke bataye gaye CMT areas aur unke loaders pehle se ticked hain. Zaroorat ke mutabiq tabdeel kar sakte hain.</p>
+      <p style="font-size:12px; color:#475569; margin-top:-6px;">Your selected CMT areas and their loaders are pre-checked. You can modify them as needed.</p>
       <div style="display:flex; gap:8px; margin-bottom:8px;">
         <button type="button" class="mini-btn" style="padding:4px 8px; font-size:11px;" id="btnSelectAllAreas">Select All</button>
         <button type="button" class="mini-btn" style="padding:4px 8px; font-size:11px;" id="btnClearAllAreas">Unselect All</button>
@@ -1296,14 +1296,14 @@
   <div class="modal-overlay" id="topicsModal">
     <div class="modal-box">
       <h3>📝 Update Weekly & Monthly Safety Briefing Topics</h3>
-      <p style="font-size:12px; color:#475569; margin-top:-6px;">Yeh topics browser mein save ho jayenge aur har shift ki Job Safety Briefing sheet mein automatically lag jayenge.</p>
+      <p style="font-size:12px; color:#475569; margin-top:-6px;">These topics will be saved in your browser and automatically applied to every shift's Job Safety Briefing sheet.</p>
       <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
         <div>
-          <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;">📅 Monthly Topic (Har mahine update karein):</label>
+          <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;">📅 Monthly Topic (Update monthly):</label>
           <textarea id="inputMonthlyTopic" rows="3" style="width:100%; padding:8px; border:1px solid #94a3b8; border-radius:5px; font-size:12.5px;"></textarea>
         </div>
         <div>
-          <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;">🗓️ Weekly Topic (Har hafte update karein):</label>
+          <label style="font-size:12px; font-weight:700; display:block; margin-bottom:4px;">🗓️ Weekly Topic (Update weekly):</label>
           <textarea id="inputWeeklyTopic" rows="3" style="width:100%; padding:8px; border:1px solid #94a3b8; border-radius:5px; font-size:12.5px;"></textarea>
         </div>
       </div>
@@ -1319,9 +1319,9 @@
     <div class="modal-box" style="max-width:740px;">
       <h3>🔄 Fixed CTO Staff &amp; 6-Day Cycle Auto-Shuffle (CMT-1 ↔ CMT-2)</h3>
       <p style="font-size:12px; color:#475569; margin-top:-6px; line-height:1.45;">
-        <strong>1. Fixed CTO Staff:</strong> Jin staff ko aap CTO par tick karenge woh har cycle aur har date par hamesha <strong>CTO</strong> mein fix rahenge.<br>
-        <strong>2. 6-Day Cycle Auto-Shuffle:</strong> Regular staff jab apna <strong>1 Morning + 2 Night</strong> cycle mukammal karke <strong>3 Off</strong> ke baad naye cycle mein aayenge, to script unki pichli cycle ki side (<strong>CMT-1 ↔ CMT-2</strong>) automatically swap kar degi.<br>
-        <strong>3. Smart OT Balancer:</strong> Agar kisi side ka regular banda leave/shortage par ho, to OT staff pehle us side ki kami poori karega aur baqi OT 50/50 split honge.
+        <strong>1. Fixed CTO Staff:</strong> Staff checked for CTO will remain permanently assigned to <strong>CTO</strong> across every cycle and date.<br>
+        <strong>2. 6-Day Cycle Auto-Shuffle:</strong> When regular staff complete their <strong>1 Morning + 2 Night</strong> cycle and return after <strong>3 Off</strong> days into a new cycle, the script automatically swaps their previous cycle side (<strong>CMT-1 ↔ CMT-2</strong>).<br>
+        <strong>3. Smart OT Balancer:</strong> If a regular staff member on either side is on leave or shortage, OT staff will first fill that side's gap and remaining OT staff will be split 50/50.
       </p>
 
       <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; background:#f8fafc; padding:10px; border:1px solid #cbd5e1; border-radius:6px; margin-bottom:10px;">
@@ -1337,7 +1337,7 @@
       </div>
 
       <div style="font-size:12px; font-weight:700; margin-bottom:6px; color:#0f172a;">
-        Fixed CTO Staff &amp; Fixed CTO Loaders (Uncheck karke kisi bhi loader/staff ko CTO Fixed se nikal sakte hain):
+        Fixed CTO Staff &amp; Fixed CTO Loaders (Uncheck any loader or staff member to remove them from Fixed CTO):
       </div>
       <div style="display:flex; gap:6px; margin-bottom:8px;">
         <input type="text" id="customFixedCtoInput" placeholder="Enter Staff ID (e.g. C63889) to add..." style="flex:1; padding:5px 8px; border:1px solid #94a3b8; border-radius:4px; font-size:12px;">
@@ -1365,7 +1365,7 @@
     <div class="modal-box" style="max-width:520px;">
       <h3>📐 Excel &amp; Print Page Layout Settings</h3>
       <p style="font-size:12px; color:#475569; margin-top:-6px; line-height:1.45;">
-        Yeh settings <strong>Generate Sheet</strong>, <strong>Export Excel (Styled)</strong>, aur <strong>Print / Save PDF</strong> teeno par automatic apply hongi.
+        These settings will automatically apply to <strong>Generate Sheet</strong>, <strong>Export Excel (Styled)</strong>, and <strong>Print / Save PDF</strong>.
       </p>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;">
         <div>
@@ -1423,7 +1423,7 @@
     <div class="modal-box" style="max-width:600px;">
       <h3>📟 PDA Numbers &amp; Contact Directory</h3>
       <p style="font-size:12px; color:#475569; margin-top:-6px; line-height:1.45;">
-        Har line par <strong>PDA Number</strong> aur uska <strong>Mobile Number</strong> likhein (maslan: <code>1737 - 056 990 6389</code>). Naya PDA add ya edit karne par autocomplete aur <strong>PDA STAND BY</strong> list foran update ho jayegi.
+        Enter each <strong>PDA Number</strong> and its <strong>Mobile Number</strong> on a new line (e.g., <code>1737 - 056 990 6389</code>). Adding or editing a PDA immediately updates autocomplete and the <strong>PDA STAND BY</strong> list.
       </p>
       <textarea id="pdaDirectoryTextarea" rows="13" style="width:100%; padding:8px; border:1px solid #94a3b8; border-radius:5px; font-family:monospace; font-size:12.5px;"></textarea>
       <div style="display:flex; justify-content:space-between; gap:8px; margin-top:14px;">
@@ -2162,8 +2162,8 @@
 
     const trackedCount = Object.keys(cycleHistoryByEmp).length;
     document.getElementById('cycleHistorySummary').innerHTML =
-      '<strong>Tracked Cycle Memory:</strong> ' + trackedCount + ' staff members ka cycle record save hai. ' +
-      'Jab aap kisi shift ki sheet generate ya adjust karte hain, har staff ki side automatically save hoti rehti hai.';
+      '<strong>Tracked Cycle Memory:</strong> Cycle records saved for ' + trackedCount + ' staff members. ' +
+      'Whenever you generate or adjust a shift sheet, each staff member\'s side is automatically saved.';
 
     document.getElementById('ctoCycleModal').style.display = 'flex';
   }
@@ -2178,7 +2178,7 @@
   }
 
   function clearCycleHistoryMemory() {
-    if (!confirm('Kya aap waqai poori Cycle History Memory reset karna chahte hain?')) return;
+    if (!confirm('Are you sure you want to reset the entire Cycle History Memory?')) return;
     cycleHistoryByEmp = {};
     saveCycleRulesStorage();
     openCtoCycleModal();
@@ -2218,7 +2218,7 @@
         saveCycleRulesStorage();
         openCtoCycleModal();
         generateSheet();
-        alert('Staff Fixed CTO & Cycle Rules kamyabi se import ho gaye!');
+        alert('Staff Fixed CTO & Cycle Rules imported successfully!');
       } catch (err) {
         alert('Invalid JSON file: ' + err.message);
       }
@@ -2526,7 +2526,7 @@
                 if (lastSec) lastParts.push(lastSec);
                 if (lastShiftLbl) lastParts.push(lastShiftLbl);
                 const subHtml = '<span class="rem-sub-last">' + (lastParts.length ? ('Last: ' + lastParts.join(' ')) : 'Last: -') + '</span>';
-                savedAaScreenTag = '<span class="screen-only-remark no-print" contenteditable="false" title="Sirf screen par show hoga — Print mein nahi aayega"><span>' + topLbl + '</span>' + subHtml + '</span>';
+                savedAaScreenTag = '<span class="screen-only-remark no-print" contenteditable="false" title="Visible on screen only — will not appear in print"><span>' + topLbl + '</span>' + subHtml + '</span>';
               }
             }
             const savedStaffRemPart = rem ? ((savedAaScreenTag ? ' ' : '') + rem) : '';
@@ -2656,7 +2656,7 @@
                 if (lastLdrSec) ldrParts.push(lastLdrSec);
                 if (lastLdrShift) ldrParts.push(lastLdrShift);
                 const ldrSubHtml = '<span class="rem-sub-last">' + (ldrParts.length ? ('Last: ' + ldrParts.join(' ')) : 'Last: -') + '</span>';
-                savedScreenTag = '<span class="screen-only-remark no-print" contenteditable="false" title="Sirf screen par show hoga — Print mein nahi aayega"><span>' + tagTxt + '</span>' + ldrSubHtml + '</span>';
+                savedScreenTag = '<span class="screen-only-remark no-print" contenteditable="false" title="Visible on screen only — will not appear in print"><span>' + tagTxt + '</span>' + ldrSubHtml + '</span>';
               }
             }
             const savedRemPart = rem ? ((savedScreenTag ? ' ' : '') + rem) : '';
@@ -2794,7 +2794,7 @@
   function clearSavedForCurrentDateShift() {
     const key = getCurrentDateShiftKey();
     if (!key) {
-      alert('Pehle koi Date aur Shift select karein.');
+      alert('Please select a Date and Shift first.');
       return;
     }
     delete staffSectionPrefsByShift[key];
@@ -2805,7 +2805,7 @@
       localStorage.setItem('cmt_shift_saved_edits', JSON.stringify(shiftSavedEdits));
     } catch (e) {}
     generateSheet();
-    document.getElementById('statusText').innerText = 'Reset complete: Is Date aur Shift ke purane edits clear karke fresh roster se generate kar diya gaya hai.';
+    document.getElementById('statusText').innerText = 'Reset complete: Previous edits for this Date and Shift have been cleared and regenerated fresh from the roster.';
   }
 
   function loadTopicsIntoDom() {
@@ -2843,8 +2843,8 @@
   function getCurrentLiveShiftAndDate() {
     const now = new Date();
     const hour = now.getHours();
-    // 05:00 se 16:59 (0500 - 1700) tak Morning Shift (SHIFT-1)
-    // 17:00 se 04:59 (1700 - 0500) tak Night Shift (SHIFT-2) — 00:00 se 04:59 ke darmiyan operational date pichlay din ki hoti hai
+    // 05:00 to 16:59 (0500 - 1700) is Morning Shift (SHIFT-1)
+    // 17:00 to 04:59 (1700 - 0500) is Night Shift (SHIFT-2) — between 00:00 and 04:59, operational date belongs to the previous day
     const shiftChoice = (hour >= 5 && hour < 17) ? 'SHIFT-1' : 'SHIFT-2';
     const opDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     if (hour < 5) {
@@ -3045,7 +3045,7 @@
     if (!file) return;
 
     if (typeof XLSX === 'undefined') {
-      alert('Internet connection check karein: Excel library load nahi ho saki.');
+      alert('Please check your internet connection: Excel library could not be loaded.');
       return;
     }
 
@@ -3065,7 +3065,7 @@
           '✅ Roster Updated & Saved (' + file.name + ') — Selected Date (' + (savedLastSession.dateOnly || 'Auto') + ') & ' + savedLastSession.shiftChoice + ' preserved!';
       } catch (err) {
         document.getElementById('statusText').innerText = 'Error: ' + err.message;
-        alert('Excel file read karne mein error aaya: ' + err.message);
+        alert('Error reading Excel file: ' + err.message);
       }
     };
     reader.readAsArrayBuffer(file);
@@ -3108,7 +3108,7 @@
     const textGrid = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
 
     if (!rawGrid || rawGrid.length === 0) {
-      document.getElementById('statusText').innerText = 'Error: Selected sheet khali hai.';
+      document.getElementById('statusText').innerText = 'Error: Selected sheet is empty.';
       return;
     }
 
@@ -3263,7 +3263,7 @@
       opt.textContent = '-- No Dates Found in Sheet --';
       dateSelect.appendChild(opt);
       document.getElementById('statusText').innerText =
-        'Warning: "' + sheetName + '" mein koi date column nahi mila.';
+        'Warning: No date columns found in "' + sheetName + '".';
       return;
     }
 
@@ -4312,7 +4312,7 @@
         let aaScreenTagHtml = '';
         if (p.role === 'AA' && p.aaTopTag && (currentSec === 'CMT-1' || currentSec === 'CMT-2')) {
           const lastSubHtml = '<span class="rem-sub-last">' + (p.aaLastDutyText || 'Last: -') + '</span>';
-          aaScreenTagHtml = '<span class="screen-only-remark no-print" contenteditable="false" title="Sirf screen par show hoga — Print mein nahi aayega"><span>' + p.aaTopTag + '</span>' + lastSubHtml + '</span>';
+          aaScreenTagHtml = '<span class="screen-only-remark no-print" contenteditable="false" title="Visible on screen only — will not appear in print"><span>' + p.aaTopTag + '</span>' + lastSubHtml + '</span>';
         }
         const staffRemTextPart = p.remark ? ((aaScreenTagHtml ? ' ' : '') + p.remark) : '';
 
@@ -4370,7 +4370,7 @@
 
         const ldrLastSubHtml = '<span class="rem-sub-last">' + (p.ldrLastDutyText || 'Last: -') + '</span>';
         const screenTagHtml = (p.screenShiftTag && (locLabel === 'CMT-1' || locLabel === 'CMT-2'))
-          ? '<span class="screen-only-remark no-print" contenteditable="false" title="Sirf screen par show hoga — Print mein nahi aayega"><span>' + p.screenShiftTag + '</span>' + ldrLastSubHtml + '</span>'
+          ? '<span class="screen-only-remark no-print" contenteditable="false" title="Visible on screen only — will not appear in print"><span>' + p.screenShiftTag + '</span>' + ldrLastSubHtml + '</span>'
           : '';
         const remTextPart = p.remark ? ((screenTagHtml ? ' ' : '') + p.remark) : '';
         tr.innerHTML =
@@ -4456,7 +4456,7 @@
     const tr = btn && btn.closest ? btn.closest('tr') : null;
     if (!tr) return;
     if (isRosterStaffRow(tr)) {
-      alert('Yeh staff roster mein maujood hai, isay delete nahi kiya ja sakta. Agar shortage mein bhejna ho to →S button istemal karein.');
+      alert('This staff member is in the roster and cannot be deleted. Use the →S button to move them to Shortage.');
       return;
     }
     clearTimeout(autoSaveTimer);
@@ -6371,7 +6371,7 @@
         });
 
         if (alreadyOwner) {
-          alert('PDA ' + typedNum + ' pehle se "' + alreadyOwner + '" ko allocate hai! Pehle wahan se Clear karein taake Standby mein wapas aaye.');
+          alert('PDA ' + typedNum + ' is already allocated to "' + alreadyOwner + '"! Clear it there first to return it to Standby.');
           updatePdaCellDisplay(td, '', '');
           showPdaAutocomplete(e.target);
           updatePdaStandbyFooter();
@@ -6531,7 +6531,7 @@
 
   function loadRosterFrom2DGrid(grid, sourceLabel, preserveCurrentSelection) {
     if (!Array.isArray(grid) || grid.length === 0) {
-      throw new Error('Live Roster response mein koi data rows nahi mile.');
+      throw new Error('No data rows found in Live Roster response.');
     }
     const ws = XLSX.utils.aoa_to_sheet(grid);
     const wb = XLSX.utils.book_new();
@@ -6652,6 +6652,7 @@
     if (isFetchingLiveRoster) return false;
     isFetchingLiveRoster = true;
     const statusEl = document.getElementById('statusText');
+    if (statusEl) statusEl.style.color = '';
     const syncBtn = document.getElementById('btnSyncLiveRoster');
     const liveFileSel = document.getElementById('liveFileSelect');
 
@@ -6665,7 +6666,7 @@
         syncBtn.innerText = '⏳ Syncing...';
       }
       if (statusEl) {
-        statusEl.innerText = '🌐 Live Google Drive Roster fetch ho raha hai...';
+        statusEl.innerText = '🌐 Fetching Live Google Drive Roster...';
       }
       currentProgressVal = 12;
       showLiveProgressBar(
@@ -6678,7 +6679,7 @@
 
     try {
       if (typeof XLSX === 'undefined') {
-        throw new Error('SheetJS (XLSX) library load nahi ho saki.');
+        throw new Error('SheetJS (XLSX) library could not be loaded.');
       }
 
       const sep = LIVE_ROSTER_SCRIPT_URL.includes('?') ? '&' : '?';
@@ -6811,7 +6812,7 @@
       // 2. Fallback Format: 2D Grid / Multi-sheet JSON
       const extracted = extractGridFromLiveJson(payload);
       if (!extracted) {
-        throw new Error((payload && payload.message) ? payload.message : 'Live Roster data format samajh nahi aaya.');
+        throw new Error((payload && payload.message) ? payload.message : 'Unrecognized Live Roster data format.');
       }
 
       const liveLabel = (payload && payload.fileName) ? payload.fileName : 'Live_Google_Sheet_Roster';
@@ -6858,13 +6859,13 @@
     } catch (err) {
       console.warn('Live Roster fetch error:', err);
       if (statusEl && !isSilentCheck) {
-        statusEl.innerText = '⚠️ Live Roster sync fail (' + err.message + ') — Saved offline roster check ho raha hai...';
+        statusEl.innerText = '⚠️ Live Roster sync failed (' + err.message + ') — Checking saved offline roster...';
       }
       if (!isSilentCheck) {
         hideLiveProgressBar();
       }
       if (isManualClick) {
-        alert('Live Roster load karne mein masla aaya: ' + err.message + '\n\nCheck karein ke Apps Script Web App "Anyone" access par deployed hai.');
+        alert('Error loading Live Roster: ' + err.message + '\n\nPlease verify that the Apps Script Web App is deployed with "Anyone" access.');
       }
       return false;
     } finally {
@@ -6904,7 +6905,9 @@
     const cacheStillValid = cachedLoadedOk && isLiveCacheFresh();
     if (cacheStillValid) {
       const remTime = formatRemainingCacheTime();
-      document.getElementById('statusText').innerText =
+      const statusElCached = document.getElementById('statusText');
+      statusElCached.style.color = '#dc2626';
+      statusElCached.innerText =
         '⚡ Cached Live Roster Loaded: "' + (cachedRecord.fileName || 'Saved Roster') + '" (Next auto-download in ' + remTime + ' — click Sync Live Roster anytime for immediate update)';
     } else {
       showLiveProgressBar(
