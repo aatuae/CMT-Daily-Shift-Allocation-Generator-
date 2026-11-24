@@ -23,7 +23,7 @@
 
   * {
     box-sizing: border-box;
-    font-family: 'Segoe UI', Arial, sans-serif;
+    font-family: Calibri, 'Segoe UI', Arial, sans-serif;
   }
 
   body {
@@ -341,30 +341,31 @@
     width: 100%;
     table-layout: fixed;
     border-collapse: collapse;
-    font-size: 11px;
+    font-size: 12px;
   }
 
   tr.aa-highlight-row td {
     background-color: #d9d9d9 !important;
-    font-size: 11px !important;
+    font-size: 12px !important;
     font-weight: 800 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
   tr.aa-highlight-row td.col-time {
-    font-size: 11px !important;
+    font-size: 12px !important;
   }
   tr.aa-highlight-row .name-text,
   tr.aa-highlight-row .editable-cell,
   tr.aa-highlight-row .pda-num-edit {
-    font-size: 11px !important;
+    font-size: 12px !important;
     font-weight: 800 !important;
   }
 
   table.alloc-table th {
     background: #ededed;
     border: 1px solid #000;
-    padding: 1.5px 3px;
+    padding: 2px 3px;
+    font-size: 11px;
     font-weight: 700;
     text-align: center;
     white-space: nowrap;
@@ -373,9 +374,9 @@
 
   table.alloc-table td {
     border: 1px solid #000;
-    padding: 2px 3px;
-    height: 20px;
-    line-height: 1.15;
+    padding: 2.5px 3px;
+    min-height: 22px;
+    line-height: 1.22;
     vertical-align: middle;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -405,8 +406,8 @@
   @media print {
     .del-row-btn { display: none !important; }
   }
-  .col-id { width: 8%; text-align: center; font-weight: 600; }
-  .col-name { width: 26.5%; text-align: center; font-weight: 600; }
+  .col-id { width: 7.5%; text-align: center; font-weight: 600; }
+  .col-name { width: 28.5%; text-align: center; font-weight: 700; }
   td.col-name {
     text-align: left;
     vertical-align: middle !important;
@@ -419,14 +420,14 @@
     overflow: visible !important;
     text-overflow: clip !important;
   }
-  .col-title { width: 6.5%; text-align: center; }
-  .col-comp { width: 8.5%; text-align: center; }
-  .col-pda { width: 7.5%; text-align: center; }
-  .col-ttr { width: 7.5%; text-align: center; }
+  .col-title { width: 6%; text-align: center; }
+  .col-comp { width: 8%; text-align: center; }
+  .col-pda { width: 7%; text-align: center; }
+  .col-ttr { width: 7%; text-align: center; }
   .col-loc { width: 15%; text-align: center; font-weight: 600; }
-  .col-rem { width: 17%; text-align: center; }
+  .col-rem { width: 16.5%; text-align: center; }
   .col-rem-shortage { width: 32%; text-align: center; }
-  .col-time { width: 13.5%; text-align: center; font-weight: 600; font-size: 11px; }
+  .col-time { width: 13.5%; text-align: center; font-weight: 600; font-size: 11.5px; }
 
   .editable-cell {
     outline: none;
@@ -442,8 +443,10 @@
     display: inline-block;
     max-width: calc(100% - 54px);
     min-width: 55%;
-    min-height: 14px;
-    line-height: 1.15;
+    min-height: 15px;
+    font-size: 12.2px;
+    font-weight: 700;
+    line-height: 1.22;
     padding: 0;
     margin: 0;
     vertical-align: middle;
@@ -1080,11 +1083,11 @@
     .section-block table.alloc-table {
       flex: 1 1 auto !important;
       height: 100% !important;
-      font-size: 10.5px !important;
+      font-size: 11.2px !important;
     }
     tr.aa-highlight-row td {
       background-color: #d9d9d9 !important;
-      font-size: 10.5px !important;
+      font-size: 11.2px !important;
       font-weight: 800 !important;
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
@@ -1093,15 +1096,16 @@
     tr.aa-highlight-row .name-text,
     tr.aa-highlight-row .editable-cell,
     tr.aa-highlight-row .pda-num-edit {
-      font-size: 10.5px !important;
+      font-size: 11.2px !important;
     }
     table.alloc-table th {
       padding: 0.5px 3px !important;
+      font-size: 10px !important;
     }
     table.alloc-table td {
       padding: 1.5px 3px !important;
       height: auto !important;
-      line-height: 1.15 !important;
+      line-height: 1.18 !important;
       vertical-align: middle !important;
       white-space: normal !important;
       word-break: break-word !important;
@@ -1113,6 +1117,8 @@
       padding-bottom: 1.5px !important;
       padding-left: 5px !important;
       padding-right: 3px !important;
+      font-size: 11.5px !important;
+      font-weight: 700 !important;
       vertical-align: middle !important;
       white-space: normal !important;
       word-break: break-word !important;
@@ -1123,9 +1129,11 @@
       display: inline !important;
       max-width: 100% !important;
       min-width: 0 !important;
+      font-size: 11.5px !important;
+      font-weight: 700 !important;
       white-space: normal !important;
       word-break: break-word !important;
-      line-height: 1.12 !important;
+      line-height: 1.16 !important;
     }
     .footer-table {
       margin-top: 1.5px !important;
@@ -1425,8 +1433,8 @@
 
   <!-- Page Layout Settings Modal (Excel Export + Print) -->
   <div class="modal-overlay" id="pageLayoutModal">
-    <div class="modal-box" style="max-width:520px;">
-      <h3>📐 Excel &amp; Print Page Layout Settings</h3>
+    <div class="modal-box" style="max-width:620px;">
+      <h3>📐 Excel &amp; Print Page Layout &amp; Typography Settings</h3>
       <p style="font-size:12px; color:#475569; margin-top:-6px; line-height:1.45;">
         These settings will automatically apply to <strong>Generate Sheet</strong>, <strong>Export Excel (Styled)</strong>, and <strong>Print / Save PDF</strong>.
       </p>
@@ -1463,6 +1471,94 @@
           </select>
         </div>
       </div>
+
+      <div style="margin-top:12px; background:#eff6ff; border:1px solid #93c5fd; border-radius:6px; padding:10px;">
+        <div style="font-size:12px; font-weight:800; color:#1e3a8a; margin-bottom:8px;">🔤 Font Family, Staff/Loader/Sequence Numbers, PDA, TTR &amp; Role Typography</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+          <div>
+            <label style="font-size:11.5px; font-weight:700; display:block; margin-bottom:3px;">Font Family:</label>
+            <select id="plFontFamily" style="width:100%; border:1px solid #94a3b8;">
+              <option value="Calibri, 'Segoe UI', Arial, sans-serif" selected>Calibri (Recommended)</option>
+              <option value="Arial, Calibri, sans-serif">Arial</option>
+              <option value="'Segoe UI', Calibri, Arial, sans-serif">Segoe UI</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11.5px; font-weight:700; display:block; margin-bottom:3px;">EOs Staff Number Size (px):</label>
+            <input type="number" id="plEoStaffNoSize" min="7" max="15" step="0.5" value="10" style="width:100%; padding:6px 8px; border:1px solid #94a3b8; border-radius:5px; font-size:13px;">
+          </div>
+          <div>
+            <label style="font-size:11.5px; font-weight:700; display:block; margin-bottom:3px;">Loader Staff Number Size (px):</label>
+            <input type="number" id="plLoaderStaffNoSize" min="7" max="15" step="0.5" value="10" style="width:100%; padding:6px 8px; border:1px solid #94a3b8; border-radius:5px; font-size:13px;">
+          </div>
+          <div>
+            <label style="font-size:11.5px; font-weight:700; display:block; margin-bottom:3px;">Sequence Number (No) Size (px):</label>
+            <input type="number" id="plSeqNoSize" min="7" max="15" step="0.5" value="10" style="width:100%; padding:6px 8px; border:1px solid #94a3b8; border-radius:5px; font-size:13px;">
+          </div>
+          <div>
+            <label style="font-size:11.5px; font-weight:700; display:block; margin-bottom:3px;">PDA Text Size (px):</label>
+            <input type="number" id="plPdaSize" min="7" max="15" step="0.5" value="9.2" style="width:100%; padding:6px 8px; border:1px solid #94a3b8; border-radius:5px; font-size:13px;">
+          </div>
+          <div>
+            <label style="font-size:11.5px; font-weight:700; display:block; margin-bottom:3px;">TTR Text Size (px):</label>
+            <input type="number" id="plTtrSize" min="7" max="15" step="0.5" value="10" style="width:100%; padding:6px 8px; border:1px solid #94a3b8; border-radius:5px; font-size:13px;">
+          </div>
+          <div>
+            <label style="font-size:11.5px; font-weight:700; display:block; margin-bottom:3px;">EO &amp; Title Font Size (px):</label>
+            <input type="number" id="plEoSize" min="8" max="15" step="0.5" value="10" style="width:100%; padding:6px 8px; border:1px solid #94a3b8; border-radius:5px; font-size:13px;">
+          </div>
+          <div>
+            <label style="font-size:11.5px; font-weight:700; display:block; margin-bottom:3px;">AA Font Size (px):</label>
+            <input type="number" id="plAaSize" min="8" max="15" step="0.5" value="10.5" style="width:100%; padding:6px 8px; border:1px solid #94a3b8; border-radius:5px; font-size:13px;">
+          </div>
+          <div>
+            <label style="font-size:11.5px; font-weight:700; display:block; margin-bottom:3px;">Remarks Font Size (px):</label>
+            <input type="number" id="plRemarksSize" min="7" max="14" step="0.5" value="8.5" style="width:100%; padding:6px 8px; border:1px solid #94a3b8; border-radius:5px; font-size:13px;">
+          </div>
+          <div>
+            <label style="font-size:11.5px; font-weight:700; display:block; margin-bottom:3px;">Timing Font Size (px):</label>
+            <input type="number" id="plTimeSize" min="7" max="15" step="0.5" value="11.5" style="width:100%; padding:6px 8px; border:1px solid #94a3b8; border-radius:5px; font-size:13px;">
+          </div>
+          <div>
+            <label style="font-size:11.5px; font-weight:700; display:block; margin-bottom:3px;">Company Font Size (px):</label>
+            <input type="number" id="plCompSize" min="7" max="15" step="0.5" value="11" style="width:100%; padding:6px 8px; border:1px solid #94a3b8; border-radius:5px; font-size:13px;">
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; padding-top:8px; border-top:1px solid #bfdbfe; font-size:11.5px; font-weight:700; color:#0f172a;">
+          <label style="display:inline-flex; align-items:center; gap:5px; cursor:pointer;">
+            <input type="checkbox" id="plBoldEoStaffNo" checked> Bold EOs Staff Number (Unchecked = Unbold)
+          </label>
+          <label style="display:inline-flex; align-items:center; gap:5px; cursor:pointer;">
+            <input type="checkbox" id="plBoldLoaderStaffNo" checked> Bold Loader Staff Number (Unchecked = Unbold)
+          </label>
+          <label style="display:inline-flex; align-items:center; gap:5px; cursor:pointer;">
+            <input type="checkbox" id="plBoldSeqNo" checked> Bold Sequence Number (Unchecked = Unbold)
+          </label>
+          <label style="display:inline-flex; align-items:center; gap:5px; cursor:pointer;">
+            <input type="checkbox" id="plBoldPda" checked> Bold PDA Text (Unchecked = Unbold)
+          </label>
+          <label style="display:inline-flex; align-items:center; gap:5px; cursor:pointer;">
+            <input type="checkbox" id="plBoldTtr"> Bold TTR Text (Unchecked = Unbold)
+          </label>
+          <label style="display:inline-flex; align-items:center; gap:5px; cursor:pointer;">
+            <input type="checkbox" id="plBoldEo"> Bold EO &amp; Title (Unchecked = Unbold)
+          </label>
+          <label style="display:inline-flex; align-items:center; gap:5px; cursor:pointer;">
+            <input type="checkbox" id="plBoldAa" checked> Bold AA Rows (Unchecked = Unbold)
+          </label>
+          <label style="display:inline-flex; align-items:center; gap:5px; cursor:pointer;">
+            <input type="checkbox" id="plBoldRemarks"> Bold Remarks (Unchecked = Unbold)
+          </label>
+          <label style="display:inline-flex; align-items:center; gap:5px; cursor:pointer;">
+            <input type="checkbox" id="plBoldTime" checked> Bold Timing (Unchecked = Unbold)
+          </label>
+          <label style="display:inline-flex; align-items:center; gap:5px; cursor:pointer;">
+            <input type="checkbox" id="plBoldComp"> Bold Company (Unchecked = Unbold)
+          </label>
+        </div>
+      </div>
+
       <div style="margin-top:12px; display:flex; flex-direction:column; gap:6px; background:#f8fafc; padding:10px; border:1px solid #cbd5e1; border-radius:6px;">
         <label style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; cursor:pointer;">
           <input type="checkbox" id="plCenterHoriz" checked>
@@ -5415,10 +5511,10 @@
     });
 
     // Target printable A4 height is ~1065px (286mm at 96dpi)
-    const targetA4Px = 1055;
-    let fontSize = totalDataRows > 42 ? 8.8 : (totalDataRows > 36 ? 9.5 : (totalDataRows > 30 ? 10.0 : 10.5));
-    let vPad = totalDataRows > 42 ? 0.5 : (totalDataRows > 36 ? 1.0 : 1.5);
-    let lineH = totalDataRows > 42 ? 1.05 : 1.12;
+    const targetA4Px = 1065;
+    let fontSize = totalDataRows > 46 ? 9.8 : (totalDataRows > 38 ? 10.5 : (totalDataRows > 32 ? 11.0 : 11.5));
+    let vPad = totalDataRows > 46 ? 0.5 : (totalDataRows > 38 ? 1.0 : 1.5);
+    let lineH = totalDataRows > 46 ? 1.08 : 1.15;
 
     function applyAllocationFit(fs, vp, lh) {
       allTables.forEach(function(tbl) {
@@ -5431,11 +5527,44 @@
           td.style.height = 'auto';
         });
         tbl.querySelectorAll('th').forEach(function(th) {
-          th.style.fontSize = Math.max(8, fs - 0.5) + 'px';
+          th.style.fontSize = Math.max(8.5, fs - 0.5) + 'px';
         });
-        tbl.querySelectorAll('.name-text, .editable-cell, .pda-num-edit').forEach(function(el) {
+        tbl.querySelectorAll('.name-text').forEach(function(el) {
+          el.style.fontSize = (fs + 0.4) + 'px';
+          el.style.fontWeight = '700';
+          el.style.lineHeight = String(lh);
+        });
+        tbl.querySelectorAll('.editable-cell:not(.name-text), .pda-num-edit').forEach(function(el) {
           el.style.fontSize = fs + 'px';
           el.style.lineHeight = String(lh);
+        });
+        tbl.querySelectorAll('td.col-no, td.col-no .sr-num').forEach(function(el) {
+          el.style.fontSize = (parseFloat(pageLayoutConfig.seqNoSize) || 10) + 'px';
+          el.style.fontWeight = (pageLayoutConfig.boldSeqNo !== false) ? '700' : '400';
+        });
+        tbl.querySelectorAll('tbody:not(#ldr1_body):not(#ldr2_body):not(#ldrcto_body) td.col-id').forEach(function(td) {
+          td.style.fontSize = (parseFloat(pageLayoutConfig.eoStaffNoSize) || 10) + 'px';
+          td.style.fontWeight = (pageLayoutConfig.boldEoStaffNo !== false) ? '700' : '400';
+        });
+        tbl.querySelectorAll('tbody#ldr1_body td.col-id, tbody#ldr2_body td.col-id, tbody#ldrcto_body td.col-id').forEach(function(td) {
+          td.style.fontSize = (parseFloat(pageLayoutConfig.loaderStaffNoSize) || 10) + 'px';
+          td.style.fontWeight = (pageLayoutConfig.boldLoaderStaffNo !== false) ? '700' : '400';
+        });
+        tbl.querySelectorAll('td.col-pda, td.col-pda .pda-num-edit').forEach(function(el) {
+          el.style.fontSize = (parseFloat(pageLayoutConfig.pdaSize) || 9.2) + 'px';
+          el.style.fontWeight = (pageLayoutConfig.boldPda !== false) ? '700' : '400';
+        });
+        tbl.querySelectorAll('td.col-ttr').forEach(function(td) {
+          td.style.fontSize = (parseFloat(pageLayoutConfig.ttrSize) || 10) + 'px';
+          td.style.fontWeight = pageLayoutConfig.boldTtr ? '700' : '400';
+        });
+        tbl.querySelectorAll('td.col-time').forEach(function(td) {
+          td.style.fontSize = (parseFloat(pageLayoutConfig.timeSize) || 11.5) + 'px';
+          td.style.fontWeight = (pageLayoutConfig.boldTime !== false) ? '700' : '400';
+        });
+        tbl.querySelectorAll('td.col-comp').forEach(function(td) {
+          td.style.fontSize = (parseFloat(pageLayoutConfig.compSize) || 11) + 'px';
+          td.style.fontWeight = pageLayoutConfig.boldComp ? '700' : '400';
         });
       });
     }
@@ -5504,7 +5633,28 @@
     margin: '0.2',
     fitHeight: '1',
     centerHoriz: true,
-    showGridlines: false
+    showGridlines: false,
+    fontFamily: "Calibri, 'Segoe UI', Arial, sans-serif",
+    eoStaffNoSize: 10,
+    loaderStaffNoSize: 10,
+    seqNoSize: 10,
+    pdaSize: 9.2,
+    ttrSize: 10,
+    eoSize: 10,
+    aaSize: 10.5,
+    remarksSize: 8.5,
+    timeSize: 11.5,
+    compSize: 11,
+    boldEoStaffNo: true,
+    boldLoaderStaffNo: true,
+    boldSeqNo: true,
+    boldPda: true,
+    boldTtr: false,
+    boldEo: false,
+    boldAa: true,
+    boldRemarks: false,
+    boldTime: true,
+    boldComp: false
   };
 
   try {
@@ -5521,6 +5671,27 @@
     document.getElementById('plFitHeight').value = pageLayoutConfig.fitHeight;
     document.getElementById('plCenterHoriz').checked = !!pageLayoutConfig.centerHoriz;
     document.getElementById('plShowGridlines').checked = !!pageLayoutConfig.showGridlines;
+    document.getElementById('plFontFamily').value = pageLayoutConfig.fontFamily || "Calibri, 'Segoe UI', Arial, sans-serif";
+    document.getElementById('plEoStaffNoSize').value = pageLayoutConfig.eoStaffNoSize !== undefined ? pageLayoutConfig.eoStaffNoSize : 10;
+    document.getElementById('plLoaderStaffNoSize').value = pageLayoutConfig.loaderStaffNoSize !== undefined ? pageLayoutConfig.loaderStaffNoSize : 10;
+    document.getElementById('plSeqNoSize').value = pageLayoutConfig.seqNoSize !== undefined ? pageLayoutConfig.seqNoSize : 10;
+    document.getElementById('plPdaSize').value = pageLayoutConfig.pdaSize !== undefined ? pageLayoutConfig.pdaSize : 9.2;
+    document.getElementById('plTtrSize').value = pageLayoutConfig.ttrSize !== undefined ? pageLayoutConfig.ttrSize : 10;
+    document.getElementById('plEoSize').value = pageLayoutConfig.eoSize !== undefined ? pageLayoutConfig.eoSize : 10;
+    document.getElementById('plAaSize').value = pageLayoutConfig.aaSize !== undefined ? pageLayoutConfig.aaSize : 10.5;
+    document.getElementById('plRemarksSize').value = pageLayoutConfig.remarksSize !== undefined ? pageLayoutConfig.remarksSize : 8.5;
+    document.getElementById('plTimeSize').value = pageLayoutConfig.timeSize !== undefined ? pageLayoutConfig.timeSize : 11.5;
+    document.getElementById('plCompSize').value = pageLayoutConfig.compSize !== undefined ? pageLayoutConfig.compSize : 11;
+    document.getElementById('plBoldEoStaffNo').checked = pageLayoutConfig.boldEoStaffNo !== false;
+    document.getElementById('plBoldLoaderStaffNo').checked = pageLayoutConfig.boldLoaderStaffNo !== false;
+    document.getElementById('plBoldSeqNo').checked = pageLayoutConfig.boldSeqNo !== false;
+    document.getElementById('plBoldPda').checked = pageLayoutConfig.boldPda !== false;
+    document.getElementById('plBoldTtr').checked = !!pageLayoutConfig.boldTtr;
+    document.getElementById('plBoldEo').checked = !!pageLayoutConfig.boldEo;
+    document.getElementById('plBoldAa').checked = pageLayoutConfig.boldAa !== false;
+    document.getElementById('plBoldRemarks').checked = !!pageLayoutConfig.boldRemarks;
+    document.getElementById('plBoldTime').checked = pageLayoutConfig.boldTime !== false;
+    document.getElementById('plBoldComp').checked = !!pageLayoutConfig.boldComp;
     document.getElementById('pageLayoutModal').style.display = 'flex';
   }
 
@@ -5538,6 +5709,60 @@
     styleTag.textContent = '@media print { @page { size: ' + cssSize + ' ' + cssOrient + '; margin: ' + mmMargin + 'mm; } }';
   }
 
+  function applyTypographySettings() {
+    const ff = pageLayoutConfig.fontFamily || "Calibri, 'Segoe UI', Arial, sans-serif";
+    const eoStaffNoSz = parseFloat(pageLayoutConfig.eoStaffNoSize) || 10;
+    const loaderStaffNoSz = parseFloat(pageLayoutConfig.loaderStaffNoSize) || 10;
+    const seqNoSz = parseFloat(pageLayoutConfig.seqNoSize) || 10;
+    const pdaSz = parseFloat(pageLayoutConfig.pdaSize) || 9.2;
+    const ttrSz = parseFloat(pageLayoutConfig.ttrSize) || 10;
+    const eoSz = parseFloat(pageLayoutConfig.eoSize) || 10;
+    const aaSz = parseFloat(pageLayoutConfig.aaSize) || 10.5;
+    const remSz = parseFloat(pageLayoutConfig.remarksSize) || 8.5;
+    const timeSz = parseFloat(pageLayoutConfig.timeSize) || 11.5;
+    const compSz = parseFloat(pageLayoutConfig.compSize) || 11;
+
+    const eoStaffNoWt = (pageLayoutConfig.boldEoStaffNo !== false) ? '700' : '400';
+    const loaderStaffNoWt = (pageLayoutConfig.boldLoaderStaffNo !== false) ? '700' : '400';
+    const seqNoWt = (pageLayoutConfig.boldSeqNo !== false) ? '700' : '400';
+    const pdaWt = (pageLayoutConfig.boldPda !== false) ? '700' : '400';
+    const ttrWt = pageLayoutConfig.boldTtr ? '700' : '400';
+    const eoWt = pageLayoutConfig.boldEo ? '700' : '400';
+    const aaWt = (pageLayoutConfig.boldAa !== false) ? '700' : '400';
+    const remWt = pageLayoutConfig.boldRemarks ? '700' : '400';
+    const timeWt = (pageLayoutConfig.boldTime !== false) ? '700' : '400';
+    const compWt = pageLayoutConfig.boldComp ? '700' : '400';
+
+    let typoStyle = document.getElementById('dynamicTypographyCss');
+    if (!typoStyle) {
+      typoStyle = document.createElement('style');
+      typoStyle.id = 'dynamicTypographyCss';
+      document.head.appendChild(typoStyle);
+    }
+
+    typoStyle.textContent =
+      '.a4-sheet, .a4-sheet *, .jsb-wrapper, .jsb-wrapper * { font-family: ' + ff + ' !important; }' +
+      '.a4-sheet table.alloc-table td { font-weight: 400; }' +
+      '.a4-sheet table.alloc-table td.col-no, .a4-sheet table.alloc-table td.col-no .sr-num { font-size: ' + seqNoSz + 'px !important; font-weight: ' + seqNoWt + ' !important; }' +
+      '.a4-sheet table.alloc-table tbody:not(#ldr1_body):not(#ldr2_body):not(#ldrcto_body) td.col-id { font-size: ' + eoStaffNoSz + 'px !important; font-weight: ' + eoStaffNoWt + ' !important; }' +
+      '.a4-sheet table.alloc-table tbody#ldr1_body td.col-id, .a4-sheet table.alloc-table tbody#ldr2_body td.col-id, .a4-sheet table.alloc-table tbody#ldrcto_body td.col-id { font-size: ' + loaderStaffNoSz + 'px !important; font-weight: ' + loaderStaffNoWt + ' !important; }' +
+      '.a4-sheet table.alloc-table td.col-pda, .a4-sheet table.alloc-table td.col-pda .pda-num-edit { font-size: ' + pdaSz + 'px !important; font-weight: ' + pdaWt + ' !important; }' +
+      '.a4-sheet table.alloc-table td.col-ttr { font-size: ' + ttrSz + 'px !important; font-weight: ' + ttrWt + ' !important; }' +
+      '.a4-sheet table.alloc-table td.col-name .name-text { font-size: ' + eoSz + 'px !important; font-weight: ' + eoWt + ' !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; max-width: 100% !important; }' +
+      '.a4-sheet table.alloc-table td.col-title, .a4-sheet table.alloc-table td.col-title .title-role-select { font-size: ' + eoSz + 'px !important; font-weight: ' + eoWt + ' !important; }' +
+      '.a4-sheet table.alloc-table td.col-comp { font-size: ' + compSz + 'px !important; font-weight: ' + compWt + ' !important; }' +
+      '.a4-sheet table.alloc-table td.col-time { font-size: ' + timeSz + 'px !important; font-weight: ' + timeWt + ' !important; }' +
+      '.a4-sheet table.alloc-table td.col-rem, .a4-sheet table.alloc-table td.col-rem-shortage { font-size: ' + remSz + 'px !important; font-weight: ' + remWt + ' !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }' +
+      '.a4-sheet table.alloc-table tr.aa-highlight-row td, .a4-sheet table.alloc-table tr.aa-highlight-row .name-text, .a4-sheet table.alloc-table tr.aa-highlight-row .editable-cell, .a4-sheet table.alloc-table tr.aa-highlight-row .pda-num-edit { font-size: ' + aaSz + 'px !important; font-weight: ' + aaWt + ' !important; }' +
+      '.a4-sheet table.alloc-table tr.aa-highlight-row td.col-no, .a4-sheet table.alloc-table tr.aa-highlight-row td.col-no .sr-num { font-size: ' + seqNoSz + 'px !important; font-weight: ' + seqNoWt + ' !important; }' +
+      '.a4-sheet table.alloc-table tr.aa-highlight-row td.col-id { font-size: ' + eoStaffNoSz + 'px !important; font-weight: ' + eoStaffNoWt + ' !important; }' +
+      '.a4-sheet table.alloc-table tr.aa-highlight-row td.col-pda, .a4-sheet table.alloc-table tr.aa-highlight-row td.col-pda .pda-num-edit { font-size: ' + pdaSz + 'px !important; font-weight: ' + pdaWt + ' !important; }' +
+      '.a4-sheet table.alloc-table tr.aa-highlight-row td.col-ttr { font-size: ' + ttrSz + 'px !important; font-weight: ' + ttrWt + ' !important; }' +
+      '.a4-sheet table.alloc-table tr.aa-highlight-row td.col-comp { font-size: ' + compSz + 'px !important; font-weight: ' + compWt + ' !important; }' +
+      '.a4-sheet table.alloc-table tr.aa-highlight-row td.col-time { font-size: ' + timeSz + 'px !important; font-weight: ' + timeWt + ' !important; }' +
+      '.a4-sheet table.alloc-table tr.aa-highlight-row td.col-rem, .a4-sheet table.alloc-table tr.aa-highlight-row td.col-rem-shortage { font-size: ' + remSz + 'px !important; font-weight: ' + remWt + ' !important; }';
+  }
+
   function savePageLayoutSettings() {
     pageLayoutConfig = {
       paperSize: document.getElementById('plPaperSize').value,
@@ -5545,17 +5770,44 @@
       margin: document.getElementById('plMargins').value,
       fitHeight: document.getElementById('plFitHeight').value,
       centerHoriz: document.getElementById('plCenterHoriz').checked,
-      showGridlines: document.getElementById('plShowGridlines').checked
+      showGridlines: document.getElementById('plShowGridlines').checked,
+      fontFamily: document.getElementById('plFontFamily').value,
+      eoStaffNoSize: parseFloat(document.getElementById('plEoStaffNoSize').value) || 10,
+      loaderStaffNoSize: parseFloat(document.getElementById('plLoaderStaffNoSize').value) || 10,
+      seqNoSize: parseFloat(document.getElementById('plSeqNoSize').value) || 10,
+      pdaSize: parseFloat(document.getElementById('plPdaSize').value) || 9.2,
+      ttrSize: parseFloat(document.getElementById('plTtrSize').value) || 10,
+      eoSize: parseFloat(document.getElementById('plEoSize').value) || 10,
+      aaSize: parseFloat(document.getElementById('plAaSize').value) || 10.5,
+      remarksSize: parseFloat(document.getElementById('plRemarksSize').value) || 8.5,
+      timeSize: parseFloat(document.getElementById('plTimeSize').value) || 11.5,
+      compSize: parseFloat(document.getElementById('plCompSize').value) || 11,
+      boldEoStaffNo: document.getElementById('plBoldEoStaffNo').checked,
+      boldLoaderStaffNo: document.getElementById('plBoldLoaderStaffNo').checked,
+      boldSeqNo: document.getElementById('plBoldSeqNo').checked,
+      boldPda: document.getElementById('plBoldPda').checked,
+      boldTtr: document.getElementById('plBoldTtr').checked,
+      boldEo: document.getElementById('plBoldEo').checked,
+      boldAa: document.getElementById('plBoldAa').checked,
+      boldRemarks: document.getElementById('plBoldRemarks').checked,
+      boldTime: document.getElementById('plBoldTime').checked,
+      boldComp: document.getElementById('plBoldComp').checked
     };
     try {
       localStorage.setItem('cmt_page_layout_cfg', JSON.stringify(pageLayoutConfig));
     } catch (e) {}
     applyPageLayoutToCss();
+    applyTypographySettings();
     document.getElementById('pageLayoutModal').style.display = 'none';
     const st = document.getElementById('statusText');
     if (st) {
       const sizeNames = { '9': 'A4', '1': 'Letter', '5': 'Legal', '8': 'A3' };
-      st.innerText = 'Page Layout Saved: ' + (sizeNames[pageLayoutConfig.paperSize] || 'A4') + ' | ' + pageLayoutConfig.orientation + ' | Margin ' + pageLayoutConfig.margin + ' in';
+      st.innerText = 'Page Layout & Typography Saved: ' + (sizeNames[pageLayoutConfig.paperSize] || 'A4') +
+        ' | EO#:' + pageLayoutConfig.eoStaffNoSize + 'px (' + (pageLayoutConfig.boldEoStaffNo ? 'Bold' : 'Unbold') + ')' +
+        ' | Ldr#:' + pageLayoutConfig.loaderStaffNoSize + 'px (' + (pageLayoutConfig.boldLoaderStaffNo ? 'Bold' : 'Unbold') + ')' +
+        ' | Seq#:' + pageLayoutConfig.seqNoSize + 'px (' + (pageLayoutConfig.boldSeqNo ? 'Bold' : 'Unbold') + ')' +
+        ' | PDA:' + pageLayoutConfig.pdaSize + 'px (' + (pageLayoutConfig.boldPda ? 'Bold' : 'Unbold') + ')' +
+        ' | TTR:' + pageLayoutConfig.ttrSize + 'px (' + (pageLayoutConfig.boldTtr ? 'Bold' : 'Unbold') + ')';
     }
   }
 
@@ -5682,10 +5934,10 @@
       ' <Style ss:ID="sMetaRight"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font ss:FontName="Arial" ss:Size="9.5" ss:Bold="1"/></Style>\n' +
       ' <Style ss:ID="sSecHdr"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font ss:FontName="Arial" ss:Size="11.5" ss:Bold="1" ss:Color="#000000"/><Interior ss:Color="#A6A6A6" ss:Pattern="Solid"/></Style>\n' +
       ' <Style ss:ID="sColHdr"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font ss:FontName="Arial" ss:Size="9" ss:Bold="1"/><Interior ss:Color="#EDEDED" ss:Pattern="Solid"/></Style>\n' +
-      ' <Style ss:ID="sDataCenter"><Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font ss:FontName="Arial" ss:Size="10.5" ss:Bold="0"/></Style>\n' +
-      ' <Style ss:ID="sDataLeft"><Alignment ss:Horizontal="Left" ss:Vertical="Center" ss:Indent="1" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font ss:FontName="Arial" ss:Size="10.5" ss:Bold="0"/></Style>\n' +
-      ' <Style ss:ID="sAaCenter"><Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font ss:FontName="Arial" ss:Size="10.5" ss:Bold="1"/><Interior ss:Color="#D9D9D9" ss:Pattern="Solid"/></Style>\n' +
-      ' <Style ss:ID="sAaLeft"><Alignment ss:Horizontal="Left" ss:Vertical="Center" ss:Indent="1" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font ss:FontName="Arial" ss:Size="10.5" ss:Bold="1"/><Interior ss:Color="#D9D9D9" ss:Pattern="Solid"/></Style>\n' +
+      ' <Style ss:ID="sDataCenter"><Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font ss:FontName="Arial" ss:Size="11.5" ss:Bold="0"/></Style>\n' +
+      ' <Style ss:ID="sDataLeft"><Alignment ss:Horizontal="Left" ss:Vertical="Center" ss:Indent="1" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font ss:FontName="Arial" ss:Size="11.5" ss:Bold="0"/></Style>\n' +
+      ' <Style ss:ID="sAaCenter"><Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font ss:FontName="Arial" ss:Size="11.5" ss:Bold="1"/><Interior ss:Color="#D9D9D9" ss:Pattern="Solid"/></Style>\n' +
+      ' <Style ss:ID="sAaLeft"><Alignment ss:Horizontal="Left" ss:Vertical="Center" ss:Indent="1" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font ss:FontName="Arial" ss:Size="11.5" ss:Bold="1"/><Interior ss:Color="#D9D9D9" ss:Pattern="Solid"/></Style>\n' +
       ' <Style ss:ID="sFootLbl"><Alignment ss:Horizontal="Left" ss:Vertical="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders><Font ss:FontName="Arial" ss:Size="9" ss:Bold="1"/><Interior ss:Color="#EDEDED" ss:Pattern="Solid"/></Style>\n' +
       '</Styles>\n' +
       '<Worksheet ss:Name="' + escXml(sheetTabName) + '">\n' +
@@ -5970,6 +6222,7 @@
     try { localStorage.setItem('cmt_show_pda_phone', String(showPdaPhoneOption)); } catch (e) {}
     ensureDeleteButtonsOnAllRows();
     applyAaRowStyling();
+    applyTypographySettings();
     updatePdaStandbyFooter();
     captureCurrentDateShiftEdits();
   }
@@ -6005,6 +6258,7 @@
 
   function ensureDeleteButtonsOnAllRows() {
     applyAaRowStyling();
+    applyTypographySettings();
     const allTbodies = ['cmt1_body', 'cmt2_body', 'cto_body', 'ldr1_body', 'ldr2_body', 'ldrcto_body', 'shortage_body'];
     allTbodies.forEach(function(tbId) {
       const tb = document.getElementById(tbId);
@@ -6043,6 +6297,7 @@
     showPdaStandbyOption = chk ? chk.checked : true;
     try { localStorage.setItem('cmt_show_pda_standby', String(showPdaStandbyOption)); } catch (e) {}
     applyAaRowStyling();
+    applyTypographySettings();
     updatePdaStandbyFooter();
     captureCurrentDateShiftEdits();
   }
@@ -6090,6 +6345,7 @@
       });
     });
     applyAaRowStyling();
+    applyTypographySettings();
     updatePdaStandbyFooter();
     captureCurrentDateShiftEdits();
   }
@@ -6557,6 +6813,7 @@
       ldrItems
     );
     applyAaRowStyling();
+    applyTypographySettings();
     updatePdaStandbyFooter();
     captureCurrentDateShiftEdits();
   }
