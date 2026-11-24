@@ -7871,6 +7871,79 @@
     if (!hasBootedCmtApp) initCmtRosterApp();
   });
 
+const SAFETY_TOPICS_API = "https://script.google.com/macros/s/AKfycbwUEBGVGTd2_aimbYwMkCJqkIeofF994E16lSAO64B0b7RySudxyHo63TgVs_osVNLDfw/exec";
+// Agar aap direct Google Drive JSON file ID use karna chahein to yahan dalein (optional):
+const DRIVE_TOPICS_JSON_FILE_ID = "";
+
+function applySyncedSafetyTopics(data) {
+  if (!data || typeof data !== "object") return;
+
+  const newMonthly = (data.monthlyTopic || data.monthly || "").toString().trim();
+  const newWeekly = (data.weeklyTopic || data.weekly || "").toString().trim();
+
+  if (!newMonthly && !newWeekly) return;
+
+  if (newMonthly) {
+    savedMonthlyTopic = newMonthly;
+    const mEl = document.getElementById("jsb_monthly_topic");
+    const mInput = document.getElementById("inputMonthlyTopic");
+    if (mEl) mEl.innerText = newMonthly;
+    if (mInput) mInput.value = newMonthly;
+    try { localStorage.setItem("cmt_jsb_monthly_topic", newMonthly); } catch (e) {}
+  }
+
+  if (newWeekly) {
+    savedWeeklyTopic = newWeekly;
+    const wEl = document.getElementById("jsb_weekly_topic");
+    const wInput = document.getElementById("inputWeeklyTopic");
+    if (wEl) wEl.innerText = newWeekly;
+    if (wInput) wInput.value = newWeekly;
+    try { localStorage.setItem("cmt_jsb_weekly_topic", newWeekly); } catch (e) {}
+  }
+
+  if (typeof autoFitJsbFormPage === "function") {
+    autoFitJsbFormPage();
+  }
+}
+
+async function fetchJsonFromGoogleDriveFile(fileId) {
+  if (!fileId) return null;
+  const directUrl = "https://drive.google.com/uc?export=download&id=" + encodeURIComponent(fileId) + "&_t=" + Date.now();
+  const resp = await fetch(directUrl, { cache: "no-store" });
+  if (!resp.ok) throw new Error("Drive JSON fetch failed: " + resp.status);
+  return await resp.json();
+}
+
+async function autoSyncSafetyTopics() {
+  try {
+    let data = null;
+
+    if (DRIVE_TOPICS_JSON_FILE_ID) {
+      data = await fetchJsonFromGoogleDriveFile(DRIVE_TOPICS_JSON_FILE_ID);
+    } else if (SAFETY_TOPICS_API) {
+      const sep = SAFETY_TOPICS_API.includes("?") ? "&" : "?";
+      const res = await fetch(SAFETY_TOPICS_API + sep + "_t=" + Date.now(), {
+        redirect: "follow",
+        cache: "no-store"
+      });
+      if (!res.ok) throw new Error("Topics API failed: " + res.status);
+      data = await res.json();
+    }
+
+    if (data) {
+      applySyncedSafetyTopics(data);
+    }
+  } catch (err) {
+    console.warn("Safety Topics Auto-Sync Error:", err);
+  }
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", autoSyncSafetyTopics);
+} else {
+  autoSyncSafetyTopics();
+}
+
 </script>
 </body>
 </html>
