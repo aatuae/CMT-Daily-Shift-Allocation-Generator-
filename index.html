@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CMT Daily Shift Allocation Generator (v91 - Roster Month Date Filter)</title>
+<title>CMT Daily Shift Allocation Generator (v93 - Active Session Date & Shift Persistence)</title>
 <!-- SheetJS (XLSX) CDN with fallback -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
@@ -414,6 +414,10 @@
     padding-bottom: 3px;
     padding-left: 6px;
     padding-right: 3px;
+    white-space: normal !important;
+    word-break: break-word;
+    overflow: visible !important;
+    text-overflow: clip !important;
   }
   .col-title { width: 6.5%; text-align: center; }
   .col-comp { width: 8.5%; text-align: center; }
@@ -435,16 +439,18 @@
     cursor: text;
   }
   .name-text {
-    display: inline-flex;
-    align-items: center;
-    min-width: 65%;
+    display: inline-block;
+    max-width: calc(100% - 54px);
+    min-width: 55%;
     min-height: 14px;
-    line-height: 1.2;
+    line-height: 1.15;
     padding: 0;
     margin: 0;
     vertical-align: middle;
     outline: none;
     cursor: text;
+    white-space: normal;
+    word-break: break-word;
   }
   .name-text:focus {
     background: #fef9c3;
@@ -1074,11 +1080,11 @@
     .section-block table.alloc-table {
       flex: 1 1 auto !important;
       height: 100% !important;
-      font-size: 11px !important;
+      font-size: 10.5px !important;
     }
     tr.aa-highlight-row td {
       background-color: #d9d9d9 !important;
-      font-size: 11px !important;
+      font-size: 10.5px !important;
       font-weight: 800 !important;
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
@@ -1087,7 +1093,7 @@
     tr.aa-highlight-row .name-text,
     tr.aa-highlight-row .editable-cell,
     tr.aa-highlight-row .pda-num-edit {
-      font-size: 11px !important;
+      font-size: 10.5px !important;
     }
     table.alloc-table th {
       padding: 0.5px 3px !important;
@@ -1097,12 +1103,29 @@
       height: auto !important;
       line-height: 1.15 !important;
       vertical-align: middle !important;
+      white-space: normal !important;
+      word-break: break-word !important;
+      overflow: visible !important;
+      text-overflow: clip !important;
     }
     table.alloc-table td.col-name {
       padding-top: 1.5px !important;
       padding-bottom: 1.5px !important;
-      padding-left: 6px !important;
+      padding-left: 5px !important;
+      padding-right: 3px !important;
       vertical-align: middle !important;
+      white-space: normal !important;
+      word-break: break-word !important;
+      overflow: visible !important;
+      text-overflow: clip !important;
+    }
+    table.alloc-table td.col-name .name-text {
+      display: inline !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      white-space: normal !important;
+      word-break: break-word !important;
+      line-height: 1.12 !important;
     }
     .footer-table {
       margin-top: 1.5px !important;
@@ -1265,7 +1288,7 @@
       </div>
 
       <div style="margin-left:auto; display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.22); border-radius:6px; padding:6px 12px; line-height:1.35;">
-        <div style="background:#2563eb; color:#ffffff; border:1px solid #60a5fa; border-radius:5px; padding:4px 9px; font-size:12px; font-weight:800; letter-spacing:0.6px; box-shadow:0 1px 3px rgba(0,0,0,0.25);">v91</div>
+        <div style="background:#2563eb; color:#ffffff; border:1px solid #60a5fa; border-radius:5px; padding:4px 9px; font-size:12px; font-weight:800; letter-spacing:0.6px; box-shadow:0 1px 3px rgba(0,0,0,0.25);">v93</div>
         <div style="text-align:right;">
           <div style="font-size:10px; text-transform:uppercase; letter-spacing:0.8px; color:#cbd5e1; font-weight:600;">Created by</div>
           <div style="font-size:13px; font-weight:800; color:#facc15; letter-spacing:0.4px;">ADEEL ASGHAR (497038)</div>
@@ -2912,6 +2935,32 @@
   const ROSTER_STORE_NAME = 'roster_files';
   let isRestoringRosterFromStorage = false;
   let userManuallyChangedDateOrShift = false;
+
+  // Session-based persistence (sessionStorage):
+  // - First time tab opens -> defaults to current live date & shift (05:00-17:00 Morning / 17:00-05:00 Night)
+  // - While working in the same browser tab/session -> refreshing page restores exact working file, sheet, date & shift!
+  const ACTIVE_TAB_SESSION_KEY = 'cmt_tab_active_working_session_v1';
+  let tabSessionState = null;
+  try {
+    const rawTabSess = sessionStorage.getItem(ACTIVE_TAB_SESSION_KEY);
+    if (rawTabSess) {
+      const parsedTabSess = JSON.parse(rawTabSess);
+      if (parsedTabSess && typeof parsedTabSess === 'object' && (parsedTabSess.dateOnly || parsedTabSess.shiftChoice)) {
+        tabSessionState = parsedTabSess;
+        userManuallyChangedDateOrShift = true;
+      }
+    }
+  } catch (e) {}
+
+  function saveTabSessionState(stateObj) {
+    try {
+      const merged = Object.assign({}, tabSessionState || {}, stateObj || {}, {
+        updatedAt: Date.now()
+      });
+      tabSessionState = merged;
+      sessionStorage.setItem(ACTIVE_TAB_SESSION_KEY, JSON.stringify(merged));
+    } catch (e) {}
+  }
   function getCurrentLiveShiftAndDate() {
     const now = new Date();
     const hour = now.getHours();
@@ -2970,6 +3019,15 @@
     try {
       localStorage.setItem('cmt_last_active_session', JSON.stringify(savedLastSession));
     } catch (e) {}
+
+    if (!isRestoringRosterFromStorage) {
+      saveTabSessionState({
+        fileName: savedLastSession.fileName || currentLiveFileName || '',
+        sheetName: savedLastSession.sheetName || '',
+        dateOnly: savedLastSession.dateOnly || '',
+        shiftChoice: savedLastSession.shiftChoice || ''
+      });
+    }
   }
 
   function openRosterIndexedDB() {
@@ -3213,9 +3271,13 @@
     const shiftSel = document.getElementById('shiftSelect');
     if (shiftSel) {
       const liveInfoNow = getCurrentLiveShiftAndDate();
-      shiftSel.value = userManuallyChangedDateOrShift
-        ? (shiftSel.value || liveInfoNow.shiftChoice)
-        : liveInfoNow.shiftChoice;
+      if (tabSessionState && tabSessionState.shiftChoice) {
+        shiftSel.value = tabSessionState.shiftChoice;
+      } else if (userManuallyChangedDateOrShift) {
+        shiftSel.value = shiftSel.value || liveInfoNow.shiftChoice;
+      } else {
+        shiftSel.value = liveInfoNow.shiftChoice;
+      }
     }
 
     parseSelectedSheet(true);
@@ -3733,7 +3795,8 @@
     });
 
     let selectedDateIdx = -1;
-    const desiredDate = userManuallyChangedDateOrShift ? (savedLastSession.dateOnly || '').trim() : '';
+    const sessionDesiredDate = (tabSessionState && tabSessionState.dateOnly) ? String(tabSessionState.dateOnly).trim() : '';
+    const desiredDate = sessionDesiredDate || (userManuallyChangedDateOrShift ? (savedLastSession.dateOnly || '').trim() : '');
     const liveNowInfo = getCurrentLiveShiftAndDate();
 
     unifiedDateEntries.forEach(function(d, idx) {
@@ -5333,10 +5396,72 @@
 
   function fitSheetToSingleA4() {
     const sheet = document.getElementById('printableSheet');
-    if (!sheet) return;
+    if (!sheet) {
+      autoFitJsbFormPage();
+      return;
+    }
     sheet.style.zoom = '';
     sheet.style.transform = '';
     sheet.style.width = '';
+    sheet.style.height = '';
+    sheet.style.minHeight = '';
+    sheet.style.maxHeight = '';
+
+    // Dynamically adjust row height & font size based on total staff rows so names never clip or overlap
+    const allTables = sheet.querySelectorAll('table.alloc-table');
+    let totalDataRows = 0;
+    allTables.forEach(function(tbl) {
+      totalDataRows += tbl.querySelectorAll('tbody tr').length;
+    });
+
+    // Target printable A4 height is ~1065px (286mm at 96dpi)
+    const targetA4Px = 1055;
+    let fontSize = totalDataRows > 42 ? 8.8 : (totalDataRows > 36 ? 9.5 : (totalDataRows > 30 ? 10.0 : 10.5));
+    let vPad = totalDataRows > 42 ? 0.5 : (totalDataRows > 36 ? 1.0 : 1.5);
+    let lineH = totalDataRows > 42 ? 1.05 : 1.12;
+
+    function applyAllocationFit(fs, vp, lh) {
+      allTables.forEach(function(tbl) {
+        tbl.style.fontSize = fs + 'px';
+        tbl.querySelectorAll('td').forEach(function(td) {
+          td.style.fontSize = fs + 'px';
+          td.style.paddingTop = vp + 'px';
+          td.style.paddingBottom = vp + 'px';
+          td.style.lineHeight = String(lh);
+          td.style.height = 'auto';
+        });
+        tbl.querySelectorAll('th').forEach(function(th) {
+          th.style.fontSize = Math.max(8, fs - 0.5) + 'px';
+        });
+        tbl.querySelectorAll('.name-text, .editable-cell, .pda-num-edit').forEach(function(el) {
+          el.style.fontSize = fs + 'px';
+          el.style.lineHeight = String(lh);
+        });
+      });
+    }
+
+    applyAllocationFit(fontSize, vPad, lineH);
+
+    // Measure natural unclipped height and auto-step down if rows exceed 1 A4 page
+    sheet.style.height = 'auto';
+    sheet.style.minHeight = '0';
+    sheet.style.maxHeight = 'none';
+    sheet.style.overflow = 'visible';
+
+    let guard = 0;
+    while (sheet.scrollHeight > targetA4Px && fontSize > 7.2 && guard < 25) {
+      guard++;
+      fontSize = Math.round((fontSize - 0.25) * 100) / 100;
+      vPad = Math.max(0.2, Math.round((vPad - 0.15) * 100) / 100);
+      lineH = Math.max(1.02, Math.round((lineH - 0.015) * 100) / 100);
+      applyAllocationFit(fontSize, vPad, lineH);
+    }
+
+    sheet.style.height = '';
+    sheet.style.minHeight = '';
+    sheet.style.maxHeight = '';
+    sheet.style.overflow = '';
+
     autoFitJsbFormPage();
   }
 
@@ -5346,11 +5471,19 @@
     sheet.style.zoom = '';
     sheet.style.transform = '';
     sheet.style.width = '';
-    sheet.querySelectorAll('table.alloc-table td, table.alloc-table th').forEach(function(td) {
-      td.style.paddingTop = '';
-      td.style.paddingBottom = '';
-      td.style.height = '';
-      td.style.fontSize = '';
+    sheet.style.height = '';
+    sheet.style.minHeight = '';
+    sheet.style.maxHeight = '';
+    sheet.style.overflow = '';
+    sheet.querySelectorAll('table.alloc-table').forEach(function(tbl) {
+      tbl.style.fontSize = '';
+    });
+    sheet.querySelectorAll('table.alloc-table td, table.alloc-table th, .name-text, .editable-cell, .pda-num-edit').forEach(function(el) {
+      el.style.paddingTop = '';
+      el.style.paddingBottom = '';
+      el.style.height = '';
+      el.style.fontSize = '';
+      el.style.lineHeight = '';
     });
   }
 
@@ -7381,18 +7514,44 @@
 
     isRestoringRosterFromStorage = true;
     const initialLiveInfo = getCurrentLiveShiftAndDate();
-    document.getElementById('shiftSelect').value = initialLiveInfo.shiftChoice;
-    const initPicker = document.getElementById('datePicker');
-    if (initPicker && initialLiveInfo.dateISO) initPicker.value = initialLiveInfo.dateISO;
+    const hasActiveTabSession = !!(tabSessionState && (tabSessionState.dateOnly || tabSessionState.shiftChoice));
+
+    if (hasActiveTabSession) {
+      if (tabSessionState.shiftChoice) {
+        document.getElementById('shiftSelect').value = tabSessionState.shiftChoice;
+      } else {
+        document.getElementById('shiftSelect').value = initialLiveInfo.shiftChoice;
+      }
+      if (tabSessionState.dateOnly) {
+        savedLastSession.dateOnly = tabSessionState.dateOnly;
+        const initPicker = document.getElementById('datePicker');
+        const sessIso = dateOnlyToIso(tabSessionState.dateOnly);
+        if (initPicker && sessIso) initPicker.value = sessIso;
+      }
+      if (tabSessionState.sheetName) {
+        savedLastSession.sheetName = tabSessionState.sheetName;
+      }
+      if (tabSessionState.fileName) {
+        savedLastSession.fileName = tabSessionState.fileName;
+      }
+    } else {
+      document.getElementById('shiftSelect').value = initialLiveInfo.shiftChoice;
+      const initPicker = document.getElementById('datePicker');
+      if (initPicker && initialLiveInfo.dateISO) initPicker.value = initialLiveInfo.dateISO;
+    }
 
     // 1. Check cached roster in IndexedDB first
     const cachedRecord = await loadRosterFileFromIndexedDB();
     let cachedLoadedOk = false;
-    if (cachedRecord && cachedRecord.buffer) {
+    let bootRecord = cachedRecord;
+    if (hasActiveTabSession && tabSessionState.fileName && cachedWorkbooksByFile[tabSessionState.fileName]) {
+      bootRecord = cachedWorkbooksByFile[tabSessionState.fileName];
+    }
+    if (bootRecord && bootRecord.buffer) {
       try {
-        cachedLoadedOk = loadWorkbookFromBuffer(cachedRecord.buffer, cachedRecord.fileName || 'Saved_Roster.xlsx', true);
+        cachedLoadedOk = loadWorkbookFromBuffer(bootRecord.buffer, bootRecord.fileName || 'Saved_Roster.xlsx', true);
         if (cachedLoadedOk) {
-          currentLiveFileName = cachedRecord.fileName || '';
+          currentLiveFileName = bootRecord.fileName || '';
           restoreAvailableLiveFilesDropdown(currentLiveFileName);
         }
       } catch (e) {
@@ -7406,8 +7565,11 @@
       const remTime = formatRemainingCacheTime();
       const statusElCached = document.getElementById('statusText');
       statusElCached.style.color = '#dc2626';
+      const sessionRestoredTag = hasActiveTabSession
+        ? ('🔄 Active Session Restored (' + (savedLastSession.dateOnly || '') + ' | ' + savedLastSession.shiftChoice + ') — ')
+        : '⚡ ';
       statusElCached.innerText =
-        '⚡ Cached Live Roster Loaded: "' + (cachedRecord.fileName || 'Saved Roster') + '" (Next auto-download in ' + remTime + ' — click Sync Live Roster anytime for immediate update)';
+        sessionRestoredTag + 'Cached Live Roster Loaded: "' + (bootRecord.fileName || 'Saved Roster') + '" (Next auto-download in ' + remTime + ' — click Sync Live Roster anytime for immediate update)';
     } else {
       showLiveProgressBar(
         'Live Roster Loading...',
@@ -7429,6 +7591,7 @@
     }
 
     isRestoringRosterFromStorage = false;
+    saveActiveSessionState();
     updatePdaStandbyFooter();
     autoFitJsbFormPage();
 
