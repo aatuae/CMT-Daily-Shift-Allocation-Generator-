@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CMT Daily Shift Allocation Generator (v93 - Active Session Date & Shift Persistence)</title>
+<title>CMT Daily Shift Allocation Generator (v95 - Permanent JSB Storage & Saved Page Layout)</title>
 <!-- SheetJS (XLSX) CDN with fallback -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
@@ -1264,7 +1264,7 @@
         <label>1. Live Roster / Upload Excel</label>
         <div style="display:flex; gap:6px; align-items:center;">
           <select id="liveFileSelect" style="display:none; max-width:190px; background:#064e3b; color:#ecfdf5; border-color:#10b981; font-weight:700;" onchange="switchActiveRosterFileAndDate(this.value, '', NaN)" title="Available Live Monthly Rosters in Google Drive"></select>
-          <button type="button" class="btn-success" id="btnSyncLiveRoster" style="background:#059669; white-space:nowrap;" onclick="fetchLiveRosterFromUrl(true)" title="Load latest data from Google Apps Script Live Roster">🔄 Sync Live Roster</button>
+          <button type="button" class="btn-success" id="btnSyncLiveRoster" style="background:#059669; white-space:nowrap;" onclick="fetchLiveRosterFromUrl(true); autoSyncSafetyTopics();" title="Load latest data from Google Apps Script Live Roster">🔄 Sync Live Roster</button>
           <input type="file" id="excelFile" accept=".xlsx, .xls, .csv" style="max-width:185px;" title="Manual Excel/CSV fallback upload" />
         </div>
       </div>
@@ -1296,7 +1296,7 @@
       </div>
 
       <div style="margin-left:auto; display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.22); border-radius:6px; padding:6px 12px; line-height:1.35;">
-        <div style="background:#2563eb; color:#ffffff; border:1px solid #60a5fa; border-radius:5px; padding:4px 9px; font-size:12px; font-weight:800; letter-spacing:0.6px; box-shadow:0 1px 3px rgba(0,0,0,0.25);">v93</div>
+        <div style="background:#2563eb; color:#ffffff; border:1px solid #60a5fa; border-radius:5px; padding:4px 9px; font-size:12px; font-weight:800; letter-spacing:0.6px; box-shadow:0 1px 3px rgba(0,0,0,0.25);">v95</div>
         <div style="text-align:right;">
           <div style="font-size:10px; text-transform:uppercase; letter-spacing:0.8px; color:#cbd5e1; font-weight:600;">Created by</div>
           <div style="font-size:13px; font-weight:800; color:#facc15; letter-spacing:0.4px;">ADEEL ASGHAR (497038)</div>
@@ -1378,9 +1378,12 @@
           <textarea id="inputWeeklyTopic" rows="3" style="width:100%; padding:8px; border:1px solid #94a3b8; border-radius:5px; font-size:12.5px;"></textarea>
         </div>
       </div>
-      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:14px;">
-        <button type="button" class="btn-secondary" onclick="document.getElementById('topicsModal').style.display='none'">Cancel</button>
-        <button type="button" class="btn-primary" onclick="saveBriefingTopics()">💾 Save & Update Sheet</button>
+      <div style="display:flex; justify-content:space-between; gap:8px; margin-top:14px;">
+        <button type="button" class="btn-success" style="background:#059669;" onclick="autoSyncSafetyTopics(true)">🔄 Sync Latest from Live API</button>
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="btn-secondary" onclick="document.getElementById('topicsModal').style.display='none'">Cancel</button>
+          <button type="button" class="btn-primary" onclick="saveBriefingTopics()">💾 Save & Update Sheet</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1793,7 +1796,7 @@
       <table class="jsb-table jsb-meta-table">
         <tr>
           <th style="width:21%;">Area</th>
-          <td style="width:79%; font-weight:700;" class="editable-cell" contenteditable="true">CMT/CTO</td>
+          <td style="width:79%; font-weight:700;" id="jsb_area" class="editable-cell" contenteditable="true">CMT/CTO</td>
         </tr>
         <tr>
           <th>Date</th>
@@ -1823,7 +1826,7 @@
         </thead>
         <tbody>
           <tr>
-            <td style="font-weight:600; line-height:1.45;">
+            <td id="jsb_exposures_list" class="editable-cell" contenteditable="true" style="font-weight:600; line-height:1.45;">
               Heat Stress<br><br>
               Fatigue<br>
               Line of fire<br>
@@ -1831,7 +1834,7 @@
               Blind spot<br>
               Pinch points
             </td>
-            <td class="editable-cell" contenteditable="true" style="line-height:1.38;">
+            <td id="jsb_control_mechanism" class="editable-cell" contenteditable="true" style="line-height:1.38;">
               <div style="margin-bottom:5px;">hydrate, stay in shaded areas, schedule frequent breaks.</div>
               <div style="margin-bottom:5px;">Recognize early signs of fatigue, don't drive if you are feeling tired or unwell, plan your journey in advance and leave yourself plenty of travel time to avoid rushing &amp; Drink plenty of fluids, enough rest before reporting to work.</div>
               <div style="margin-bottom:5px;">Do not place body parts in moving machinery and devices.</div>
@@ -1848,7 +1851,7 @@
         <tbody>
           <tr>
             <th style="width:21%; vertical-align:top;">Job Pause prompts</th>
-            <td class="editable-cell" contenteditable="true" style="height:26px;"></td>
+            <td id="jsb_job_pause" class="editable-cell" contenteditable="true" style="height:26px;"></td>
           </tr>
           <tr>
             <th style="width:21%; vertical-align:top;">Touch Points</th>
@@ -1867,7 +1870,7 @@
                 </div>
               </div>
 
-              <div class="editable-cell" contenteditable="true" style="line-height:1.34;">
+              <div id="jsb_touch_points_bullets" class="editable-cell" contenteditable="true" style="line-height:1.34;">
                 <div style="font-weight:700; margin-bottom:2px;">Focus group briefing - Unauthorized access and Parking in CMT</div>
                 <div style="margin-bottom:2px;">Recently Incidents – Safety Bollard Damage in CMT Area-26-04-2026</div>
                 <div style="font-weight:700; margin-bottom:2px;">Recently Incidents - Unsafe driving at CMT causing facility damage-09-05-2026</div>
@@ -1899,15 +1902,15 @@
       <table class="jsb-table jsb-feedback-table">
         <tr>
           <th style="width:21%;">Debriefing</th>
-          <td class="editable-cell" contenteditable="true" style="height:28px;"></td>
+          <td id="jsb_debriefing" class="editable-cell" contenteditable="true" style="height:28px;"></td>
         </tr>
         <tr>
           <th>Follow Up and Feedback</th>
-          <td class="editable-cell" contenteditable="true" style="height:28px;"></td>
+          <td id="jsb_followup" class="editable-cell" contenteditable="true" style="height:28px;"></td>
         </tr>
         <tr>
           <th>Hazard / Near misses Observed</th>
-          <td class="editable-cell" contenteditable="true" style="height:28px;"></td>
+          <td id="jsb_nearmiss" class="editable-cell" contenteditable="true" style="height:28px;"></td>
         </tr>
       </table>
       </div>
@@ -2611,7 +2614,7 @@
         if (!saved.jsbTlSign) document.getElementById('jsb_tl_sign').innerText = saved.metaTl;
       }
       if (saved.metaDate !== undefined && saved.metaDate !== '') document.getElementById('meta_date').innerText = saved.metaDate;
-      if (saved.jsbArea !== undefined) document.querySelector('.jsb-meta-table td:nth-child(2)').innerText = saved.jsbArea;
+      if (saved.jsbArea !== undefined && jsbPermanentState.area === null) document.querySelector('.jsb-meta-table td:nth-child(2)').innerText = saved.jsbArea;
       if (saved.jsbTiming !== undefined) document.getElementById('jsb_timing').innerText = saved.jsbTiming;
       if (saved.jsbTlId !== undefined) document.getElementById('jsb_tl_id').innerText = saved.jsbTlId;
       if (saved.jsbTlSign !== undefined) document.getElementById('jsb_tl_sign').innerText = saved.jsbTlSign;
@@ -2933,9 +2936,14 @@
       if (Array.isArray(saved.jsbFeedback)) {
         const fbTds = document.querySelectorAll('.jsb-feedback-table td');
         saved.jsbFeedback.forEach(function(val, idx) {
-          if (fbTds[idx]) fbTds[idx].innerText = val;
+          if (!fbTds[idx]) return;
+          if (idx === 0 && jsbPermanentState.debriefingHtml !== null) return;
+          if (idx === 1 && jsbPermanentState.followupHtml !== null) return;
+          if (idx === 2 && jsbPermanentState.nearmissHtml !== null) return;
+          fbTds[idx].innerText = val;
         });
       }
+      restoreJsbPermanentStateFromLocalStorage();
 
       if (Array.isArray(saved.jsbSignRows)) {
         const signTb = document.getElementById('jsb_sign_body');
@@ -3006,6 +3014,128 @@
     if (wEl) wEl.innerText = savedWeeklyTopic;
   }
 
+  // ======================== PERMANENT JSB STORAGE & ROSTER RESTORE PROTECTION ========================
+  const JSB_PERMANENT_KEY = 'cmt_jsb_permanent_fields_v1';
+  let jsbPermanentState = {
+    area: null,
+    monthlyTopic: null,
+    weeklyTopic: null,
+    exposuresHtml: null,
+    controlMechanismHtml: null,
+    jobPauseHtml: null,
+    touchPointsBulletsHtml: null,
+    debriefingHtml: null,
+    followupHtml: null,
+    nearmissHtml: null
+  };
+
+  try {
+    const rawJsbPerm = JSON.parse(localStorage.getItem(JSB_PERMANENT_KEY) || 'null');
+    if (rawJsbPerm && typeof rawJsbPerm === 'object') {
+      jsbPermanentState = Object.assign(jsbPermanentState, rawJsbPerm);
+    }
+  } catch (e) {}
+
+  function saveJsbPermanentStateToLocalStorage() {
+    if (isApplyingSavedState) return;
+    const areaEl = document.getElementById('jsb_area');
+    const mEl = document.getElementById('jsb_monthly_topic');
+    const wEl = document.getElementById('jsb_weekly_topic');
+    const expEl = document.getElementById('jsb_exposures_list');
+    const ctrlEl = document.getElementById('jsb_control_mechanism');
+    const pauseEl = document.getElementById('jsb_job_pause');
+    const tpEl = document.getElementById('jsb_touch_points_bullets');
+    const debEl = document.getElementById('jsb_debriefing');
+    const folEl = document.getElementById('jsb_followup');
+    const nmEl = document.getElementById('jsb_nearmiss');
+
+    if (areaEl) jsbPermanentState.area = areaEl.innerText.trim();
+    if (mEl) {
+      jsbPermanentState.monthlyTopic = mEl.innerText.trim();
+      savedMonthlyTopic = jsbPermanentState.monthlyTopic;
+    }
+    if (wEl) {
+      jsbPermanentState.weeklyTopic = wEl.innerText.trim();
+      savedWeeklyTopic = jsbPermanentState.weeklyTopic;
+    }
+    if (expEl) jsbPermanentState.exposuresHtml = expEl.innerHTML;
+    if (ctrlEl) jsbPermanentState.controlMechanismHtml = ctrlEl.innerHTML;
+    if (pauseEl) jsbPermanentState.jobPauseHtml = pauseEl.innerHTML;
+    if (tpEl) jsbPermanentState.touchPointsBulletsHtml = tpEl.innerHTML;
+    if (debEl) jsbPermanentState.debriefingHtml = debEl.innerHTML;
+    if (folEl) jsbPermanentState.followupHtml = folEl.innerHTML;
+    if (nmEl) jsbPermanentState.nearmissHtml = nmEl.innerHTML;
+
+    try {
+      localStorage.setItem(JSB_PERMANENT_KEY, JSON.stringify(jsbPermanentState));
+      if (jsbPermanentState.monthlyTopic !== null) {
+        localStorage.setItem('cmt_jsb_monthly_topic', jsbPermanentState.monthlyTopic);
+      }
+      if (jsbPermanentState.weeklyTopic !== null) {
+        localStorage.setItem('cmt_jsb_weekly_topic', jsbPermanentState.weeklyTopic);
+      }
+    } catch (e) {}
+  }
+
+  function restoreJsbPermanentStateFromLocalStorage() {
+    const prevFlag = isApplyingSavedState;
+    isApplyingSavedState = true;
+    try {
+      const areaEl = document.getElementById('jsb_area');
+      const mEl = document.getElementById('jsb_monthly_topic');
+      const wEl = document.getElementById('jsb_weekly_topic');
+      const expEl = document.getElementById('jsb_exposures_list');
+      const ctrlEl = document.getElementById('jsb_control_mechanism');
+      const pauseEl = document.getElementById('jsb_job_pause');
+      const tpEl = document.getElementById('jsb_touch_points_bullets');
+      const debEl = document.getElementById('jsb_debriefing');
+      const folEl = document.getElementById('jsb_followup');
+      const nmEl = document.getElementById('jsb_nearmiss');
+
+      if (areaEl && jsbPermanentState.area !== null && jsbPermanentState.area !== '') {
+        areaEl.innerText = jsbPermanentState.area;
+      }
+      if (mEl) {
+        const mVal = (jsbPermanentState.monthlyTopic !== null) ? jsbPermanentState.monthlyTopic : savedMonthlyTopic;
+        if (mVal !== null) {
+          mEl.innerText = mVal;
+          savedMonthlyTopic = mVal;
+        }
+      }
+      if (wEl) {
+        const wVal = (jsbPermanentState.weeklyTopic !== null) ? jsbPermanentState.weeklyTopic : savedWeeklyTopic;
+        if (wVal !== null) {
+          wEl.innerText = wVal;
+          savedWeeklyTopic = wVal;
+        }
+      }
+      if (expEl && jsbPermanentState.exposuresHtml !== null) {
+        expEl.innerHTML = jsbPermanentState.exposuresHtml;
+      }
+      if (ctrlEl && jsbPermanentState.controlMechanismHtml !== null) {
+        ctrlEl.innerHTML = jsbPermanentState.controlMechanismHtml;
+      }
+      if (pauseEl && jsbPermanentState.jobPauseHtml !== null) {
+        pauseEl.innerHTML = jsbPermanentState.jobPauseHtml;
+      }
+      if (tpEl && jsbPermanentState.touchPointsBulletsHtml !== null) {
+        tpEl.innerHTML = jsbPermanentState.touchPointsBulletsHtml;
+      }
+      if (debEl && jsbPermanentState.debriefingHtml !== null) {
+        debEl.innerHTML = jsbPermanentState.debriefingHtml;
+      }
+      if (folEl && jsbPermanentState.followupHtml !== null) {
+        folEl.innerHTML = jsbPermanentState.followupHtml;
+      }
+      if (nmEl && jsbPermanentState.nearmissHtml !== null) {
+        nmEl.innerHTML = jsbPermanentState.nearmissHtml;
+      }
+    } finally {
+      isApplyingSavedState = prevFlag;
+    }
+  }
+
+
   function openTopicsModal() {
     document.getElementById('inputMonthlyTopic').value = document.getElementById('jsb_monthly_topic').innerText.trim();
     document.getElementById('inputWeeklyTopic').value = document.getElementById('jsb_weekly_topic').innerText.trim();
@@ -3017,10 +3147,8 @@
     savedWeeklyTopic = document.getElementById('inputWeeklyTopic').value.trim();
     document.getElementById('jsb_monthly_topic').innerText = savedMonthlyTopic;
     document.getElementById('jsb_weekly_topic').innerText = savedWeeklyTopic;
-    try {
-      localStorage.setItem('cmt_jsb_monthly_topic', savedMonthlyTopic);
-      localStorage.setItem('cmt_jsb_weekly_topic', savedWeeklyTopic);
-    } catch (e) {}
+    saveJsbPermanentStateToLocalStorage();
+    captureCurrentDateShiftEdits();
     document.getElementById('topicsModal').style.display = 'none';
     autoFitJsbFormPage();
   }
@@ -4916,6 +5044,7 @@
     while ((sr - 1) < targetFullPageRows) {
       addSignRow('', '', '');
     }
+    restoreJsbPermanentStateFromLocalStorage();
     autoFitJsbFormPage();
   }
 
@@ -5613,7 +5742,9 @@
       el.style.height = '';
       el.style.fontSize = '';
       el.style.lineHeight = '';
+      el.style.fontWeight = '';
     });
+    applyTypographySettings();
   }
 
   function printSinglePageA4() {
@@ -5797,6 +5928,7 @@
       localStorage.setItem('cmt_page_layout_cfg', JSON.stringify(pageLayoutConfig));
     } catch (e) {}
     applyPageLayoutToCss();
+  applyTypographySettings();
     applyTypographySettings();
     document.getElementById('pageLayoutModal').style.display = 'none';
     const st = document.getElementById('statusText');
@@ -5978,6 +6110,7 @@
 
 
   function buildJsbExcelWorksheet(escXml, makeCell) {
+    const jArea = (document.getElementById('jsb_area') ? document.getElementById('jsb_area').innerText.trim() : '') || 'CMT/CTO';
     const jDate = document.getElementById('jsb_date').innerText.trim();
     const jTime = document.getElementById('jsb_timing').innerText.trim();
     const jCount = document.getElementById('jsb_staff_count').innerText.trim();
@@ -5985,10 +6118,17 @@
     const jTlId = document.getElementById('jsb_tl_id').innerText.trim();
     const mTopic = document.getElementById('jsb_monthly_topic').innerText.trim();
     const wTopic = document.getElementById('jsb_weekly_topic').innerText.trim();
+    const jExp = document.getElementById('jsb_exposures_list') ? document.getElementById('jsb_exposures_list').innerText.trim() : '';
+    const jCtrl = document.getElementById('jsb_control_mechanism') ? document.getElementById('jsb_control_mechanism').innerText.trim() : '';
+    const jPause = document.getElementById('jsb_job_pause') ? document.getElementById('jsb_job_pause').innerText.trim() : '';
+    const jTpBullets = document.getElementById('jsb_touch_points_bullets') ? document.getElementById('jsb_touch_points_bullets').innerText.trim() : '';
+    const jDebrief = document.getElementById('jsb_debriefing') ? document.getElementById('jsb_debriefing').innerText.trim() : '';
+    const jFollowup = document.getElementById('jsb_followup') ? document.getElementById('jsb_followup').innerText.trim() : '';
+    const jNearmiss = document.getElementById('jsb_nearmiss') ? document.getElementById('jsb_nearmiss').innerText.trim() : '';
 
     let x = '';
     x += '<Row ss:Height="22">' + makeCell('Job safety briefing', 'sTitle', 4) + '</Row>';
-    x += '<Row ss:Height="18">' + makeCell('Area', 'sFootLbl', 0) + makeCell('CMT/CTO', 'sDataLeft', 3) + '</Row>';
+    x += '<Row ss:Height="18">' + makeCell('Area', 'sFootLbl', 0) + makeCell(jArea, 'sDataLeft', 3) + '</Row>';
     x += '<Row ss:Height="18">' + makeCell('Date', 'sFootLbl', 0) + makeCell(jDate, 'sDataLeft', 3) + '</Row>';
     x += '<Row ss:Height="18">' + makeCell('Shift Timings', 'sFootLbl', 0) + makeCell(jTime, 'sDataLeft', 3) + '</Row>';
     x += '<Row ss:Height="18">' + makeCell('Team Leader Name', 'sFootLbl', 0) + makeCell(jTl, 'sDataLeft', 3) + '</Row>';
@@ -5996,20 +6136,20 @@
 
     x += '<Row ss:Height="17">' + makeCell('Exposures', 'sColHdr', 0) + makeCell('Control Mechanism', 'sColHdr', 3) + '</Row>';
     x += '<Row ss:Height="88">' +
-      makeCell('Heat Stress\n\nFatigue\nLine of fire\nEquipment failure\nBlind spot\nPinch points', 'sDataLeft', 0) +
-      makeCell('hydrate, stay in shaded areas, schedule frequent breaks.\nRecognize early signs of fatigue, don\'t drive if you are feeling tired or unwell, plan your journey in advance and leave yourself plenty of travel time to avoid rushing & Drink plenty of fluids, enough rest before reporting to work.\nDo not place body parts in moving machinery and devices.\nDo not stand or move between connected dollies/carts/trolleys.\nSeek assistance when required.\nConduct precheck equipment.', 'sDataLeft', 3) +
+      makeCell(jExp, 'sDataLeft', 0) +
+      makeCell(jCtrl, 'sDataLeft', 3) +
     '</Row>';
 
-    x += '<Row ss:Height="20">' + makeCell('Job Pause prompts', 'sFootLbl', 0) + makeCell('', 'sDataLeft', 3) + '</Row>';
+    x += '<Row ss:Height="20">' + makeCell('Job Pause prompts', 'sFootLbl', 0) + makeCell(jPause, 'sDataLeft', 3) + '</Row>';
     x += '<Row ss:Height="24">' + makeCell('Touch Points', 'sFootLbl', 0) + makeCell(mTopic + '\n' + wTopic, 'sDataLeft', 3) + '</Row>';
     x += '<Row ss:Height="125">' +
       makeCell('', 'sDataLeft', 0) +
-      makeCell('Focus group briefing - Unauthorized access and Parking in CMT\nRecently Incidents – Safety Bollard Damage in CMT Area-26-04-2026\nRecently Incidents - Unsafe driving at CMT causing facility damage-09-05-2026\nRecent Incident -RAP21436PC fell from a 10 ft dolly due to the side locks not being raised.\nAlways check that the dolly locks are engaged before towing cargo lanes\nSerious Safety Violation - Staff Sitting on Conveyor\n• Drink plenty of water & always be hydrated.\n• LSR & SMILE RULES\n• Eat Healthy, Get Enough Rest & Stay Healthy.\n• Always take short break, if required.\n• Always Seek medical attention, if required.\n• Line Of Fire.\n• Do not walk on Roller.\n• Any Diverting - due to Construction or Maintenance\n• Avoid wrong way entry\n• Marshaling.\n• Establishing Control Over Engine Idling\n• Staff are not permitted to access the area inside FS Gate\nThe potential use and/or abuse of alcohol and drugs is dealt with appropriately and in accordance with the law.', 'sDataLeft', 3) +
+      makeCell(jTpBullets, 'sDataLeft', 3) +
     '</Row>';
 
-    x += '<Row ss:Height="20">' + makeCell('Debriefing:', 'sFootLbl', 1) + makeCell('', 'sDataLeft', 2) + '</Row>';
-    x += '<Row ss:Height="20">' + makeCell('Follow Up and Feedback:', 'sFootLbl', 1) + makeCell('', 'sDataLeft', 2) + '</Row>';
-    x += '<Row ss:Height="20">' + makeCell('Hazard / Near misses Observed:', 'sFootLbl', 1) + makeCell('', 'sDataLeft', 2) + '</Row>';
+    x += '<Row ss:Height="20">' + makeCell('Debriefing:', 'sFootLbl', 1) + makeCell(jDebrief, 'sDataLeft', 2) + '</Row>';
+    x += '<Row ss:Height="20">' + makeCell('Follow Up and Feedback:', 'sFootLbl', 1) + makeCell(jFollowup, 'sDataLeft', 2) + '</Row>';
+    x += '<Row ss:Height="20">' + makeCell('Hazard / Near misses Observed:', 'sFootLbl', 1) + makeCell(jNearmiss, 'sDataLeft', 2) + '</Row>';
 
     x += '<Row ss:Height="18">' + makeCell('STAFF SIGNATURE SHEET', 'sSecHdr', 4) + '</Row>';
     x += '<Row ss:Height="17">' +
@@ -6846,7 +6986,10 @@
   setInterval(enforcePermanentWatermark, 2000);
 
   // Initialize blank A4 sheet & JSB on load
+  applyPageLayoutToCss();
+  applyTypographySettings();
   loadTopicsIntoDom();
+  restoreJsbPermanentStateFromLocalStorage();
   renderEmptyTemplate();
   initTbodyDropZones();
   renderJsbSheet('', '17:00-05:00', '', '', [], [], []);
@@ -6877,6 +7020,7 @@
 
   let autoSaveTimer = null;
   function saveAllNow() {
+    saveJsbPermanentStateToLocalStorage();
     syncManualFieldsFromDom();
     captureCurrentDateShiftEdits();
     saveActiveSessionState();
@@ -7295,10 +7439,18 @@
     if (e.target && (e.target.id === 'jsb_tl_name' || e.target.id === 'jsb_tl_sign')) {
       syncTeamLeaderEverywhere(e.target);
     }
+    saveJsbPermanentStateToLocalStorage();
     autoFitJsbFormPage();
     scheduleAutoSave();
   });
-  document.getElementById('jsbSheet').addEventListener('focusout', saveAllNow);
+  document.getElementById('jsbSheet').addEventListener('keyup', function() {
+    saveJsbPermanentStateToLocalStorage();
+    scheduleAutoSave();
+  });
+  document.getElementById('jsbSheet').addEventListener('focusout', function() {
+    saveJsbPermanentStateToLocalStorage();
+    saveAllNow();
+  });
 
   window.addEventListener('beforeunload', saveAllNow);
 
@@ -7848,6 +8000,9 @@
     }
 
     isRestoringRosterFromStorage = false;
+    applyPageLayoutToCss();
+    applyTypographySettings();
+    restoreJsbPermanentStateFromLocalStorage();
     saveActiveSessionState();
     updatePdaStandbyFooter();
     autoFitJsbFormPage();
@@ -7875,11 +8030,14 @@ const SAFETY_TOPICS_API = "https://script.google.com/macros/s/AKfycbwUEBGVGTd2_a
 // Agar aap direct Google Drive JSON file ID use karna chahein to yahan dalein (optional):
 const DRIVE_TOPICS_JSON_FILE_ID = "";
 
-function applySyncedSafetyTopics(data) {
+function applySyncedSafetyTopics(data, forceOverwrite) {
   if (!data || typeof data !== "object") return;
 
   const newMonthly = (data.monthlyTopic || data.monthly || "").toString().trim();
   const newWeekly = (data.weeklyTopic || data.weekly || "").toString().trim();
+  if (!forceOverwrite && (jsbPermanentState.monthlyTopic !== null || jsbPermanentState.weeklyTopic !== null)) {
+    return;
+  }
 
   if (!newMonthly && !newWeekly) return;
 
@@ -7901,6 +8059,9 @@ function applySyncedSafetyTopics(data) {
     try { localStorage.setItem("cmt_jsb_weekly_topic", newWeekly); } catch (e) {}
   }
 
+  if (forceOverwrite) {
+    saveJsbPermanentStateToLocalStorage();
+  }
   if (typeof autoFitJsbFormPage === "function") {
     autoFitJsbFormPage();
   }
@@ -7914,7 +8075,7 @@ async function fetchJsonFromGoogleDriveFile(fileId) {
   return await resp.json();
 }
 
-async function autoSyncSafetyTopics() {
+async function autoSyncSafetyTopics(showAlertOnDone) {
   try {
     let data = null;
 
@@ -7931,18 +8092,25 @@ async function autoSyncSafetyTopics() {
     }
 
     if (data) {
-      applySyncedSafetyTopics(data);
+      applySyncedSafetyTopics(data, !!showAlertOnDone);
+      if (showAlertOnDone) {
+        alert("✅ Weekly & Monthly Safety Topics synced from Live API!");
+      }
     }
   } catch (err) {
     console.warn("Safety Topics Auto-Sync Error:", err);
+    if (showAlertOnDone) {
+      alert("⚠️ Safety Topics sync failed: " + err.message);
+    }
   }
 }
 
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", autoSyncSafetyTopics);
+  document.addEventListener("DOMContentLoaded", function() { autoSyncSafetyTopics(false); });
 } else {
-  autoSyncSafetyTopics();
+  autoSyncSafetyTopics(false);
 }
+setInterval(function() { autoSyncSafetyTopics(false); }, 1800000);
 
 </script>
 </body>
