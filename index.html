@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CMT Daily Shift Allocation Generator (v95 - Permanent JSB Storage & Saved Page Layout)</title>
+<title>CMT Daily Shift Allocation Generator (v97.5 - Rich Formatting Toolbar & Toggleable Layout)</title>
 <!-- SheetJS (XLSX) CDN with fallback -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
@@ -157,6 +157,80 @@
   .status-badge {
     font-weight: 600;
     color: #1e293b;
+  }
+
+  /* Rich Text Formatting Toolbar (Toggleable via Page Layout Settings) */
+  .rich-format-toolbar {
+    background: #f8fafc;
+    padding: 6px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    border-bottom: 1px solid #cbd5e1;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .rich-format-toolbar.toolbar-disabled {
+    display: none !important;
+  }
+  .rtb-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 5px;
+    padding: 2px 4px;
+  }
+  .rtb-btn {
+    padding: 3px 7px;
+    font-size: 12px;
+    font-weight: 700;
+    background: transparent;
+    color: #0f172a;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    cursor: pointer;
+    line-height: 1.2;
+    min-width: 26px;
+  }
+  .rtb-btn:hover {
+    background: #e2e8f0;
+    border-color: #94a3b8;
+  }
+  .rtb-select {
+    padding: 2px 5px !important;
+    font-size: 11.5px !important;
+    font-weight: 600;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 3px !important;
+    min-width: auto !important;
+    height: 24px;
+    background: #ffffff;
+    color: #0f172a;
+    cursor: pointer;
+  }
+  .rtb-color-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 4px;
+    cursor: pointer;
+    color: #1e293b;
+  }
+  .rtb-color-wrap input[type="color"] {
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: 1px solid #94a3b8;
+    border-radius: 3px;
+    cursor: pointer;
+    background: transparent;
+  }
+  @media print {
+    .rich-format-toolbar { display: none !important; }
   }
 
   /* Filter Modal */
@@ -1264,7 +1338,7 @@
         <label>1. Live Roster / Upload Excel</label>
         <div style="display:flex; gap:6px; align-items:center;">
           <select id="liveFileSelect" style="display:none; max-width:190px; background:#064e3b; color:#ecfdf5; border-color:#10b981; font-weight:700;" onchange="switchActiveRosterFileAndDate(this.value, '', NaN)" title="Available Live Monthly Rosters in Google Drive"></select>
-          <button type="button" class="btn-success" id="btnSyncLiveRoster" style="background:#059669; white-space:nowrap;" onclick="fetchLiveRosterFromUrl(true); autoSyncSafetyTopics();" title="Load latest data from Google Apps Script Live Roster">🔄 Sync Live Roster</button>
+          <button type="button" class="btn-success" id="btnSyncLiveRoster" style="background:#059669; white-space:nowrap;" onclick="fetchLiveRosterFromUrl(true); autoSyncSafetyTopics(); pullDriveConfigFromGoogleDrive(true);" title="Load latest data from Google Apps Script Live Roster">🔄 Sync Live Roster</button>
           <input type="file" id="excelFile" accept=".xlsx, .xls, .csv" style="max-width:185px;" title="Manual Excel/CSV fallback upload" />
         </div>
       </div>
@@ -1296,7 +1370,7 @@
       </div>
 
       <div style="margin-left:auto; display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.22); border-radius:6px; padding:6px 12px; line-height:1.35;">
-        <div style="background:#2563eb; color:#ffffff; border:1px solid #60a5fa; border-radius:5px; padding:4px 9px; font-size:12px; font-weight:800; letter-spacing:0.6px; box-shadow:0 1px 3px rgba(0,0,0,0.25);">v95</div>
+        <div style="background:#2563eb; color:#ffffff; border:1px solid #60a5fa; border-radius:5px; padding:4px 9px; font-size:12px; font-weight:800; letter-spacing:0.6px; box-shadow:0 1px 3px rgba(0,0,0,0.25);">v97.5</div>
         <div style="text-align:right;">
           <div style="font-size:10px; text-transform:uppercase; letter-spacing:0.8px; color:#cbd5e1; font-weight:600;">Created by</div>
           <div style="font-size:13px; font-weight:800; color:#facc15; letter-spacing:0.4px;">ADEEL ASGHAR (497038)</div>
@@ -1310,7 +1384,9 @@
       <button type="button" class="btn-secondary" style="background:#7c3aed;" onclick="openTopicsModal()">📝 Update Weekly/Monthly Topics</button>
       <button type="button" class="btn-secondary" style="background:#b45309;" onclick="openPageLayoutModal()">📐 Page Layout</button>
       <button type="button" class="btn-primary" id="btnGenerate">⚡ Generate Sheet</button>
-      <button type="button" class="btn-success" style="background:#0d9488;" onclick="exportToExcel()">📊 Export Excel (Styled)</button>
+      <button type="button" class="btn-success" style="background:#0d9488;" onclick="exportToExcel()" title="Export Allocation Sheet only to Excel">📊 Export Allocation (Excel)</button>
+      <button type="button" class="btn-success" style="background:#1d4ed8;" onclick="exportJsbToWord()" title="Export Job Safety Briefing & Signature Sheet in exact MS Word format">📄 Export JSB (Word)</button>
+      <button type="button" class="btn-secondary" style="background:#0f766e;" id="btnSyncDriveConfig" onclick="manualSyncDriveConfigNow()" title="Auto-Sync Page Setup, Typography, JSB Text, Fixed CTO IDs & PDA List with Google Drive (cmt_app_config.json)">☁️ Sync Config</button>
       <button type="button" class="btn-success" onclick="printSinglePageA4()">🖨️ Print / Save PDF</button>
     </div>
   </div>
@@ -1333,6 +1409,59 @@
       <button type="button" class="mini-btn" style="padding:4px 8px; font-size:11px;" onclick="addBlankRow('cto_body')">+ Add CTO</button>
       <button type="button" class="mini-btn" style="padding:4px 8px; font-size:11px;" onclick="addBlankRow('shortage_body')">+ Add Shortage</button>
       <button type="button" class="mini-btn mini-btn-shortage" style="padding:4px 8px; font-size:11px; font-weight:700;" onclick="clearSavedForCurrentDateShift()" title="Reset saved edits for this Date and Shift and regenerate fresh from the roster">🗑️ Reset Saved Edits (This Date/Shift)</button>
+    </div>
+  </div>
+
+  <!-- Rich Text Formatting Toolbar -->
+  <div class="rich-format-toolbar no-print" id="richFormatToolbar" onmousedown="if(event.target.tagName !== 'SELECT' && event.target.tagName !== 'INPUT') event.preventDefault();">
+    <span style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase; letter-spacing:0.4px; margin-right:2px;">✏️ Format Toolbar:</span>
+    <div class="rtb-group">
+      <select class="rtb-select" id="rtbFontName" onchange="execRichCmd('fontName', this.value)" title="Font Family">
+        <option value="Calibri">Calibri</option>
+        <option value="Arial">Arial</option>
+        <option value="Segoe UI">Segoe UI</option>
+        <option value="Times New Roman">Times New Roman</option>
+      </select>
+      <select class="rtb-select" id="rtbFontSize" onchange="applyRichFontSize(this.value)" title="Text Size">
+        <option value="">Size</option>
+        <option value="9px">9 px</option>
+        <option value="10px">10 px</option>
+        <option value="11px">11 px</option>
+        <option value="12px">12 px</option>
+        <option value="14px">14 px</option>
+        <option value="16px">16 px</option>
+        <option value="18px">18 px</option>
+      </select>
+    </div>
+    <div class="rtb-group">
+      <button type="button" class="rtb-btn" onclick="execRichCmd('bold')" title="Bold (Ctrl+B)"><b>B</b></button>
+      <button type="button" class="rtb-btn" onclick="execRichCmd('italic')" title="Italic (Ctrl+I)"><i>I</i></button>
+      <button type="button" class="rtb-btn" onclick="execRichCmd('underline')" title="Underline (Ctrl+U)"><u>U</u></button>
+      <button type="button" class="rtb-btn" onclick="execRichCmd('strikeThrough')" title="Strikethrough"><s>S</s></button>
+    </div>
+    <div class="rtb-group">
+      <label class="rtb-color-wrap" title="Text Color">
+        <span>A</span>
+        <input type="color" id="rtbForeColor" value="#000000" onchange="execRichCmd('foreColor', this.value)">
+      </label>
+      <label class="rtb-color-wrap" title="Highlight / Fill Color">
+        <span>🖍️</span>
+        <input type="color" id="rtbHiliteColor" value="#fef08a" onchange="execRichCmd('hiliteColor', this.value)">
+      </label>
+    </div>
+    <div class="rtb-group">
+      <button type="button" class="rtb-btn" onclick="execRichCmd('justifyLeft')" title="Align Left">⬅</button>
+      <button type="button" class="rtb-btn" onclick="execRichCmd('justifyCenter')" title="Align Center">↔</button>
+      <button type="button" class="rtb-btn" onclick="execRichCmd('justifyRight')" title="Align Right">➡</button>
+    </div>
+    <div class="rtb-group">
+      <button type="button" class="rtb-btn" onclick="execRichCmd('insertUnorderedList')" title="Bullet List">• List</button>
+      <button type="button" class="rtb-btn" onclick="execRichCmd('insertOrderedList')" title="Numbered List">1. List</button>
+    </div>
+    <div class="rtb-group">
+      <button type="button" class="rtb-btn" onclick="execRichCmd('undo')" title="Undo">↩️</button>
+      <button type="button" class="rtb-btn" onclick="execRichCmd('redo')" title="Redo">↪️</button>
+      <button type="button" class="rtb-btn" onclick="execRichCmd('removeFormat')" title="Clear Formatting" style="color:#b91c1c;">🧹 Clear</button>
     </div>
   </div>
 
@@ -1570,6 +1699,10 @@
         <label style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; cursor:pointer;">
           <input type="checkbox" id="plShowGridlines">
           <span>Show Excel Gridlines When Printing</span>
+        </label>
+        <label style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; cursor:pointer; color:#1d4ed8;">
+          <input type="checkbox" id="plEnableToolbar" checked>
+          <span>🛠️ Enable Formatting Toolbar (Uncheck to Disable / Hide)</span>
         </label>
       </div>
       <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:14px;">
@@ -1866,11 +1999,12 @@
                 </div>
                 <div style="margin-top:5px; margin-bottom:2px;"><strong class="jsb-topic-heading" style="text-decoration:underline;">Weekly Safety Bulletin: -</strong></div>
                 <div id="jsb_weekly_topic" class="editable-cell jsb-topic-text" contenteditable="true" style="color:#9a3412;">
-                  Weekly Safety Bulletin: - Maintain Safe Clearance During ULD Positioning | Focus group briefing - Unauthorized access and Parking in CMT
+                  Weekly Safety Bulletin: - Revising the Traffic Speed Limit Around Terminal 2 &amp; Airside Access Points.
                 </div>
               </div>
 
               <div id="jsb_touch_points_bullets" class="editable-cell" contenteditable="true" style="line-height:1.34;">
+                <div style="font-weight:700; margin-bottom:2px;">Weekly Safety Bulletin: - Revising the Traffic Speed Limit Around Terminal 2 &amp; Airside Access Points.</div>
                 <div style="font-weight:700; margin-bottom:2px;">Focus group briefing - Unauthorized access and Parking in CMT</div>
                 <div style="margin-bottom:2px;">Recently Incidents – Safety Bollard Damage in CMT Area-26-04-2026</div>
                 <div style="font-weight:700; margin-bottom:2px;">Recently Incidents - Unsafe driving at CMT causing facility damage-09-05-2026</div>
@@ -1965,7 +2099,7 @@
   ];
 
   const DEFAULT_MONTHLY_TOPIC = 'dnata UAE Safety Campaign: Adverse Weather "November 2026"';
-  const DEFAULT_WEEKLY_TOPIC = 'Weekly Safety Bulletin: - Maintain Safe Clearance During ULD Positioning | Focus group briefing - Unauthorized access and Parking in CMT';
+  const DEFAULT_WEEKLY_TOPIC = 'Weekly Safety Bulletin: - Revising the Traffic Speed Limit Around Terminal 2 & Airside Access Points.';
 
   let staffSectionPrefsByShift = {};
   let staffManualFieldsByShift = {};
@@ -2018,6 +2152,7 @@
       localStorage.setItem('cmt_fixed_cto_ids', JSON.stringify(fixedCtoIds));
       localStorage.setItem('cmt_enable_cycle_shuffle', String(enableCycleShuffle));
       localStorage.setItem('cmt_cycle_history_by_emp', JSON.stringify(cycleHistoryByEmp));
+      scheduleDriveConfigAutoPush();
     } catch (e) {}
   }
 
@@ -3034,6 +3169,14 @@
     if (rawJsbPerm && typeof rawJsbPerm === 'object') {
       jsbPermanentState = Object.assign(jsbPermanentState, rawJsbPerm);
     }
+    if (!localStorage.getItem('cmt_v97_jsb_points_migrated')) {
+      savedWeeklyTopic = DEFAULT_WEEKLY_TOPIC;
+      jsbPermanentState.weeklyTopic = DEFAULT_WEEKLY_TOPIC;
+      jsbPermanentState.touchPointsBulletsHtml = null;
+      localStorage.setItem('cmt_jsb_weekly_topic', DEFAULT_WEEKLY_TOPIC);
+      localStorage.setItem(JSB_PERMANENT_KEY, JSON.stringify(jsbPermanentState));
+      localStorage.setItem('cmt_v97_jsb_points_migrated', '1');
+    }
   } catch (e) {}
 
   function saveJsbPermanentStateToLocalStorage() {
@@ -3068,6 +3211,7 @@
 
     try {
       localStorage.setItem(JSB_PERMANENT_KEY, JSON.stringify(jsbPermanentState));
+      scheduleDriveConfigAutoPush();
       if (jsbPermanentState.monthlyTopic !== null) {
         localStorage.setItem('cmt_jsb_monthly_topic', jsbPermanentState.monthlyTopic);
       }
@@ -5563,6 +5707,7 @@
     document.getElementById('btnFilterAreas').innerText = '⚙️ Filter Areas (' + selectedAreas.length + ')';
     try {
       localStorage.setItem('cmt_selected_areas', JSON.stringify(selectedAreas));
+      scheduleDriveConfigAutoPush();
     } catch (e) {}
     document.getElementById('areaModal').style.display = 'none';
     generateSheet();
@@ -5765,6 +5910,7 @@
     fitHeight: '1',
     centerHoriz: true,
     showGridlines: false,
+    enableToolbar: true,
     fontFamily: "Calibri, 'Segoe UI', Arial, sans-serif",
     eoStaffNoSize: 10,
     loaderStaffNoSize: 10,
@@ -5802,6 +5948,7 @@
     document.getElementById('plFitHeight').value = pageLayoutConfig.fitHeight;
     document.getElementById('plCenterHoriz').checked = !!pageLayoutConfig.centerHoriz;
     document.getElementById('plShowGridlines').checked = !!pageLayoutConfig.showGridlines;
+    document.getElementById('plEnableToolbar').checked = pageLayoutConfig.enableToolbar !== false;
     document.getElementById('plFontFamily').value = pageLayoutConfig.fontFamily || "Calibri, 'Segoe UI', Arial, sans-serif";
     document.getElementById('plEoStaffNoSize').value = pageLayoutConfig.eoStaffNoSize !== undefined ? pageLayoutConfig.eoStaffNoSize : 10;
     document.getElementById('plLoaderStaffNoSize').value = pageLayoutConfig.loaderStaffNoSize !== undefined ? pageLayoutConfig.loaderStaffNoSize : 10;
@@ -5838,6 +5985,82 @@
     const cssOrient = (pageLayoutConfig.orientation || 'Portrait').toLowerCase();
     const mmMargin = Math.round(parseFloat(pageLayoutConfig.margin || '0.2') * 25.4 * 10) / 10;
     styleTag.textContent = '@media print { @page { size: ' + cssSize + ' ' + cssOrient + '; margin: ' + mmMargin + 'mm; } }';
+  }
+
+  function applyToolbarVisibility() {
+    const tb = document.getElementById('richFormatToolbar');
+    if (!tb) return;
+    const isEnabled = pageLayoutConfig.enableToolbar !== false;
+    tb.classList.toggle('toolbar-disabled', !isEnabled);
+  }
+
+  let lastFocusedEditableEl = null;
+  document.addEventListener('focusin', function(e) {
+    if (e.target && e.target.isContentEditable) {
+      lastFocusedEditableEl = e.target;
+    }
+  });
+
+  function ensureEditableFocusForToolbar() {
+    const active = document.activeElement;
+    if (active && active.isContentEditable) return active;
+    if (lastFocusedEditableEl && document.body.contains(lastFocusedEditableEl)) {
+      lastFocusedEditableEl.focus();
+      return lastFocusedEditableEl;
+    }
+    return null;
+  }
+
+  function execRichCmd(cmd, val) {
+    const targetEl = ensureEditableFocusForToolbar();
+    if (!targetEl) {
+      alert('Pehle sheet ya JSB ke kisi editable box/cell par click karein.');
+      return;
+    }
+    try {
+      document.execCommand('styleWithCSS', false, true);
+      document.execCommand(cmd, false, val !== undefined ? val : null);
+    } catch (e) {
+      console.warn('Toolbar command error:', e);
+    }
+    if (typeof saveJsbPermanentStateToLocalStorage === 'function') {
+      saveJsbPermanentStateToLocalStorage();
+    }
+    if (typeof captureCurrentDateShiftEdits === 'function') {
+      captureCurrentDateShiftEdits();
+    }
+  }
+
+  function applyRichFontSize(pxSize) {
+    if (!pxSize) return;
+    const targetEl = ensureEditableFocusForToolbar();
+    if (!targetEl) {
+      alert('Pehle sheet ya JSB ke kisi editable box/cell par click karein.');
+      document.getElementById('rtbFontSize').value = '';
+      return;
+    }
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
+      const range = sel.getRangeAt(0);
+      const span = document.createElement('span');
+      span.style.fontSize = pxSize;
+      try {
+        range.surroundContents(span);
+      } catch (e) {
+        const frag = range.extractContents();
+        span.appendChild(frag);
+        range.insertNode(span);
+      }
+    } else {
+      targetEl.style.fontSize = pxSize;
+    }
+    document.getElementById('rtbFontSize').value = '';
+    if (typeof saveJsbPermanentStateToLocalStorage === 'function') {
+      saveJsbPermanentStateToLocalStorage();
+    }
+    if (typeof captureCurrentDateShiftEdits === 'function') {
+      captureCurrentDateShiftEdits();
+    }
   }
 
   function applyTypographySettings() {
@@ -5902,6 +6125,7 @@
       fitHeight: document.getElementById('plFitHeight').value,
       centerHoriz: document.getElementById('plCenterHoriz').checked,
       showGridlines: document.getElementById('plShowGridlines').checked,
+      enableToolbar: document.getElementById('plEnableToolbar').checked,
       fontFamily: document.getElementById('plFontFamily').value,
       eoStaffNoSize: parseFloat(document.getElementById('plEoStaffNoSize').value) || 10,
       loaderStaffNoSize: parseFloat(document.getElementById('plLoaderStaffNoSize').value) || 10,
@@ -5926,8 +6150,10 @@
     };
     try {
       localStorage.setItem('cmt_page_layout_cfg', JSON.stringify(pageLayoutConfig));
+      scheduleDriveConfigAutoPush();
     } catch (e) {}
     applyPageLayoutToCss();
+    applyToolbarVisibility();
   applyTypographySettings();
     applyTypographySettings();
     document.getElementById('pageLayoutModal').style.display = 'none';
@@ -5944,6 +6170,7 @@
   }
 
   applyPageLayoutToCss();
+    applyToolbarVisibility();
 
   function exportToExcel() {
     // Styled SpreadsheetML (.xls) so Excel opens with exact grey headers, black borders, bold fonts, alignment & 1-page A4 print fit
@@ -6094,7 +6321,6 @@
       '  <Print>' + (pageLayoutConfig.showGridlines ? '<Gridlines/>' : '') + '<PaperSizeIndex>' + pageLayoutConfig.paperSize + '</PaperSizeIndex><FitWidth>1</FitWidth><FitHeight>' + pageLayoutConfig.fitHeight + '</FitHeight><ValidPrinterInfo/></Print>\n' +
       ' </WorksheetOptions>\n' +
       '</Worksheet>\n' +
-      buildJsbExcelWorksheet(escXml, makeCell) +
       '</Workbook>';
 
     const blob = new Blob([xmlDoc], { type: 'application/vnd.ms-excel;charset=utf-8' });
@@ -6108,6 +6334,188 @@
     setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
   }
 
+
+
+  function exportJsbToWord() {
+    const jsbContainer = document.getElementById('jsbSheet');
+    if (!jsbContainer) {
+      alert('Job Safety Briefing sheet not found!');
+      return;
+    }
+
+    const title = document.getElementById('sheetMainTitle') ? document.getElementById('sheetMainTitle').innerText.trim() : '';
+    const titleMatch = title.match(/SHIFT-([A-Za-z0-9/_-]+)/i);
+    const seqTag = titleMatch ? ('SHIFT-' + titleMatch[1].replace(/\//g, '-')) : (document.getElementById('shiftSelect').value || 'SHIFT');
+    const dateVal = (document.getElementById('jsb_date') && document.getElementById('jsb_date').innerText.trim()) ||
+                    (document.getElementById('meta_date') && document.getElementById('meta_date').innerText.trim()) || 'JSB';
+    const cleanDate = dateVal.replace(/[^0-9A-Za-z_-]/g, '-');
+
+    const clone = jsbContainer.cloneNode(true);
+    // Remove screen-only buttons, watermarks, drag handles, and screen-only badges
+    clone.querySelectorAll('.no-print, .row-actions, .ot-badge, .drag-handle, .screen-only-remark, .creator-watermark, button').forEach(function(el) {
+      el.remove();
+    });
+
+    // Clean contenteditable attributes for clean Word rendering
+    clone.querySelectorAll('[contenteditable]').forEach(function(el) {
+      el.removeAttribute('contenteditable');
+    });
+
+    // Convert form page and signature page into clean A4 Word sections separated by a Word page break
+    const formPage = clone.querySelector('.jsb-form-page');
+    const signPage = clone.querySelector('.jsb-sign-page');
+
+    let innerHtml = '';
+    if (formPage) {
+      formPage.removeAttribute('style');
+      innerHtml += '<div class="word-section-page">' + formPage.innerHTML + '</div>';
+    }
+    if (formPage && signPage) {
+      innerHtml += '<br clear="all" style="mso-special-character:line-break; page-break-before:always;" />';
+    }
+    if (signPage) {
+      signPage.removeAttribute('style');
+      innerHtml += '<div class="word-section-page">' + signPage.innerHTML + '</div>';
+    }
+    if (!innerHtml) {
+      innerHtml = clone.innerHTML;
+    }
+
+    const ff = (typeof pageLayoutConfig !== 'undefined' && pageLayoutConfig.fontFamily)
+      ? pageLayoutConfig.fontFamily
+      : "Calibri, Arial, sans-serif";
+
+    const wordHtml =
+      '<html xmlns:o="urn:schemas-microsoft-com:office:office"\n' +
+      '      xmlns:w="urn:schemas-microsoft-com:office:word"\n' +
+      '      xmlns="http://www.w3.org/TR/REC-html40">\n' +
+      '<head>\n' +
+      '<meta charset="utf-8">\n' +
+      '<title>CMT JSB - ' + cleanDate + '</title>\n' +
+      '<!--[if gte mso 9]>\n' +
+      '<xml>\n' +
+      '  <w:WordDocument>\n' +
+      '    <w:View>Print</w:View>\n' +
+      '    <w:Zoom>100</w:Zoom>\n' +
+      '    <w:DoNotOptimizeForBrowser/>\n' +
+      '  </w:WordDocument>\n' +
+      '</xml>\n' +
+      '<![endif]-->\n' +
+      '<style>\n' +
+      '  @page WordSection1 {\n' +
+      '    size: 210mm 297mm;\n' +
+      '    margin: 7mm 8mm 7mm 8mm;\n' +
+      '    mso-header-margin: 4mm;\n' +
+      '    mso-footer-margin: 4mm;\n' +
+      '    mso-paper-source: 0;\n' +
+      '  }\n' +
+      '  div.WordSection1 { page: WordSection1; }\n' +
+      '  body, table, td, th, div, span, p, li {\n' +
+      '    font-family: ' + ff + ';\n' +
+      '    color: #000000;\n' +
+      '  }\n' +
+      '  .jsb-title-bar, .sheet-title-bar {\n' +
+      '    background-color: #d9d9d9;\n' +
+      '    color: #000000;\n' +
+      '    border: 1pt solid #000000;\n' +
+      '    text-align: center;\n' +
+      '    font-weight: bold;\n' +
+      '    font-size: 11pt;\n' +
+      '    padding: 3pt 5pt;\n' +
+      '    margin-bottom: 4pt;\n' +
+      '  }\n' +
+      '  table {\n' +
+      '    width: 100%;\n' +
+      '    border-collapse: collapse;\n' +
+      '    margin-bottom: 4pt;\n' +
+      '    mso-table-lspace: 0pt;\n' +
+      '    mso-table-rspace: 0pt;\n' +
+      '  }\n' +
+      '  th, td {\n' +
+      '    border: 1pt solid #000000;\n' +
+      '    padding: 2.5pt 4pt;\n' +
+      '    vertical-align: top;\n' +
+      '    font-size: 8.5pt;\n' +
+      '  }\n' +
+      '  th {\n' +
+      '    background-color: #d9d9d9;\n' +
+      '    font-weight: bold;\n' +
+      '    text-align: left;\n' +
+      '  }\n' +
+      '  .jsb-topic-box {\n' +
+      '    border: 1pt solid #000000;\n' +
+      '    background-color: #fefce8;\n' +
+      '    padding: 4pt 6pt;\n' +
+      '    margin-bottom: 4pt;\n' +
+      '  }\n' +
+      '  .jsb-topic-heading {\n' +
+      '    font-size: 10.5pt;\n' +
+      '    font-weight: bold;\n' +
+      '    text-decoration: underline;\n' +
+      '  }\n' +
+      '  .jsb-topic-text {\n' +
+      '    font-size: 11.5pt;\n' +
+      '    font-weight: bold;\n' +
+      '  }\n' +
+      '  .jsb-list {\n' +
+      '    margin: 2pt 0 3pt 14pt;\n' +
+      '    padding: 0;\n' +
+      '  }\n' +
+      '  .jsb-list li {\n' +
+      '    margin-bottom: 1.5pt;\n' +
+      '    font-size: 8.2pt;\n' +
+      '  }\n' +
+      '  #jsb_sign_table th {\n' +
+      '    background-color: #ededed;\n' +
+      '    text-align: center;\n' +
+      '    font-size: 8.5pt;\n' +
+      '    padding: 2pt 3pt;\n' +
+      '  }\n' +
+      '  #jsb_sign_table td {\n' +
+      '    font-size: 9pt;\n' +
+      '    padding: 2pt 4pt;\n' +
+      '    vertical-align: middle;\n' +
+      '  }\n' +
+      '  #jsb_sign_table td.col-no, #jsb_sign_table td.col-id, #jsb_sign_table td.col-title {\n' +
+      '    text-align: center;\n' +
+      '  }\n' +
+      '  #jsb_sign_table td.col-name {\n' +
+      '    text-align: left;\n' +
+      '    font-weight: bold;\n' +
+      '  }\n' +
+      '  tr.aa-highlight-row td, tr.aa-highlight-row span {\n' +
+      '    background-color: #d9d9d9 !important;\n' +
+      '    font-weight: bold !important;\n' +
+      '  }\n' +
+      '  .footer-label {\n' +
+      '    background-color: #ededed;\n' +
+      '    font-weight: bold;\n' +
+      '  }\n' +
+      '</style>\n' +
+      '</head>\n' +
+      '<body>\n' +
+      '<div class="WordSection1">\n' +
+      innerHtml +
+      '\n</div>\n' +
+      '</body>\n' +
+      '</html>';
+
+    const blob = new Blob(['\ufeff', wordHtml], { type: 'application/msword;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'CMT_JSB_' + seqTag + '_' + cleanDate + '.doc';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+
+    const st = document.getElementById('statusText');
+    if (st) {
+      st.style.color = '#1d4ed8';
+      st.innerText = '📄 JSB Word File Downloaded: CMT_JSB_' + seqTag + '_' + cleanDate + '.doc';
+    }
+  }
 
   function buildJsbExcelWorksheet(escXml, makeCell) {
     const jArea = (document.getElementById('jsb_area') ? document.getElementById('jsb_area').innerText.trim() : '') || 'CMT/CTO';
@@ -6359,7 +6767,8 @@
     const chk = document.getElementById('chkShowPdaPhone');
     showPdaPhoneOption = chk ? chk.checked : true;
     document.body.classList.toggle('hide-pda-phone', !showPdaPhoneOption);
-    try { localStorage.setItem('cmt_show_pda_phone', String(showPdaPhoneOption)); } catch (e) {}
+    try { localStorage.setItem('cmt_show_pda_phone', String(showPdaPhoneOption));
+    scheduleDriveConfigAutoPush(); } catch (e) {}
     ensureDeleteButtonsOnAllRows();
     applyAaRowStyling();
     applyTypographySettings();
@@ -6435,7 +6844,8 @@
   function togglePdaStandbyDisplay() {
     const chk = document.getElementById('chkShowPdaStandby');
     showPdaStandbyOption = chk ? chk.checked : true;
-    try { localStorage.setItem('cmt_show_pda_standby', String(showPdaStandbyOption)); } catch (e) {}
+    try { localStorage.setItem('cmt_show_pda_standby', String(showPdaStandbyOption));
+    scheduleDriveConfigAutoPush(); } catch (e) {}
     applyAaRowStyling();
     applyTypographySettings();
     updatePdaStandbyFooter();
@@ -6452,7 +6862,8 @@
 
   function resetDefaultPdaDirectory() {
     pdaDirectory = JSON.parse(JSON.stringify(DEFAULT_PDA_DIRECTORY));
-    try { localStorage.setItem('cmt_pda_directory', JSON.stringify(pdaDirectory)); } catch (e) {}
+    try { localStorage.setItem('cmt_pda_directory', JSON.stringify(pdaDirectory));
+      scheduleDriveConfigAutoPush(); } catch (e) {}
     openPdaDirectoryModal();
     updatePdaStandbyFooter();
   }
@@ -6987,6 +7398,7 @@
 
   // Initialize blank A4 sheet & JSB on load
   applyPageLayoutToCss();
+    applyToolbarVisibility();
   applyTypographySettings();
   loadTopicsIntoDom();
   restoreJsbPermanentStateFromLocalStorage();
@@ -7916,6 +8328,218 @@
     }
   }
 
+
+  // ======================== GOOGLE DRIVE JSON AUTO-SYNC (cmt_app_config.json) ========================
+  const DRIVE_CONFIG_STORAGE_META_KEY = 'cmt_drive_config_sync_meta_v1';
+  let driveConfigSyncTimer = null;
+  let isSyncingDriveConfig = false;
+  let lastSyncedConfigHash = '';
+
+  function buildAppConfigSnapshot() {
+    return {
+      schemaVersion: 1,
+      configFileName: 'cmt_app_config.json',
+      updatedAt: new Date().toISOString(),
+      pageLayoutConfig: pageLayoutConfig,
+      jsbPermanentState: (function() {
+        const cleanJsb = Object.assign({}, jsbPermanentState);
+        delete cleanJsb.monthlyTopic;
+        delete cleanJsb.weeklyTopic;
+        return cleanJsb;
+      })(),
+      fixedCtoIds: fixedCtoIds,
+      enableCycleShuffle: enableCycleShuffle,
+      pdaDirectory: pdaDirectory,
+      showPdaPhoneOption: showPdaPhoneOption,
+      showPdaStandbyOption: showPdaStandbyOption,
+      selectedAreas: selectedAreas
+    };
+  }
+
+  function computeConfigHash(snapshot) {
+    const copy = Object.assign({}, snapshot);
+    delete copy.updatedAt;
+    return JSON.stringify(copy);
+  }
+
+  function applyRemoteAppConfig(cfg) {
+    if (!cfg || typeof cfg !== 'object') return false;
+    let changed = false;
+
+    if (cfg.pageLayoutConfig && typeof cfg.pageLayoutConfig === 'object') {
+      pageLayoutConfig = Object.assign({}, pageLayoutConfig, cfg.pageLayoutConfig);
+      try { localStorage.setItem('cmt_page_layout_cfg', JSON.stringify(pageLayoutConfig)); } catch (e) {}
+      applyPageLayoutToCss();
+    applyToolbarVisibility();
+      applyTypographySettings();
+      changed = true;
+    }
+
+    if (cfg.jsbPermanentState && typeof cfg.jsbPermanentState === 'object') {
+      const remoteJsbCopy = Object.assign({}, cfg.jsbPermanentState);
+      delete remoteJsbCopy.monthlyTopic;
+      delete remoteJsbCopy.weeklyTopic;
+      jsbPermanentState = Object.assign({}, jsbPermanentState, remoteJsbCopy);
+      try {
+        localStorage.setItem(JSB_PERMANENT_KEY, JSON.stringify(jsbPermanentState));
+      } catch (e) {}
+      restoreJsbPermanentStateFromLocalStorage();
+      changed = true;
+    }
+
+    if (Array.isArray(cfg.fixedCtoIds)) {
+      fixedCtoIds = cfg.fixedCtoIds.map(function(x) { return String(x).trim().toUpperCase(); });
+      if (typeof cfg.enableCycleShuffle === 'boolean') {
+        enableCycleShuffle = cfg.enableCycleShuffle;
+      }
+      saveCycleRulesStorage();
+      changed = true;
+    }
+
+    if (Array.isArray(cfg.pdaDirectory) && cfg.pdaDirectory.length > 0) {
+      pdaDirectory = cfg.pdaDirectory;
+      if (typeof cfg.showPdaPhoneOption === 'boolean') {
+        showPdaPhoneOption = cfg.showPdaPhoneOption;
+        const chkPh = document.getElementById('chkShowPdaPhone');
+        if (chkPh) chkPh.checked = showPdaPhoneOption;
+        document.body.classList.toggle('hide-pda-phone', !showPdaPhoneOption);
+      }
+      if (typeof cfg.showPdaStandbyOption === 'boolean') {
+        showPdaStandbyOption = cfg.showPdaStandbyOption;
+        const chkSb = document.getElementById('chkShowPdaStandby');
+        if (chkSb) chkSb.checked = showPdaStandbyOption;
+      }
+      try {
+        localStorage.setItem('cmt_pda_directory', JSON.stringify(pdaDirectory));
+        localStorage.setItem('cmt_show_pda_phone', String(showPdaPhoneOption));
+        localStorage.setItem('cmt_show_pda_standby', String(showPdaStandbyOption));
+      } catch (e) {}
+      updatePdaStandbyFooter();
+      changed = true;
+    }
+
+    if (Array.isArray(cfg.selectedAreas) && cfg.selectedAreas.length > 0) {
+      selectedAreas = cfg.selectedAreas;
+      try { localStorage.setItem('cmt_selected_areas', JSON.stringify(selectedAreas)); } catch (e) {}
+      const btnAreas = document.getElementById('btnFilterAreas');
+      if (btnAreas) btnAreas.innerText = '⚙️ Filter Areas (' + selectedAreas.length + ')';
+      changed = true;
+    }
+
+    if (changed) {
+      lastSyncedConfigHash = computeConfigHash(buildAppConfigSnapshot());
+    }
+    return changed;
+  }
+
+  async function pullDriveConfigFromGoogleDrive(silent) {
+    if (isSyncingDriveConfig) return false;
+    isSyncingDriveConfig = true;
+    const btn = document.getElementById('btnSyncDriveConfig');
+    if (btn && !silent) {
+      btn.disabled = true;
+      btn.innerText = '⏳ Syncing Config...';
+    }
+    try {
+      const sep = LIVE_ROSTER_SCRIPT_URL.includes('?') ? '&' : '?';
+      const url = LIVE_ROSTER_SCRIPT_URL + sep + 'action=getConfig&fileName=cmt_app_config.json&_t=' + Date.now();
+      const resp = await fetch(url, { redirect: 'follow', cache: 'no-store' });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const data = await resp.json();
+
+      const remoteCfg = (data && data.config && typeof data.config === 'object')
+        ? data.config
+        : ((data && data.status === 'success' && data.data && typeof data.data === 'object') ? data.data : null);
+
+      if (remoteCfg && remoteCfg.schemaVersion) {
+        const localMeta = JSON.parse(localStorage.getItem(DRIVE_CONFIG_STORAGE_META_KEY) || '{}');
+        const remoteTs = remoteCfg.updatedAt ? Date.parse(remoteCfg.updatedAt) : 0;
+        const localTs = localMeta.updatedAt ? Date.parse(localMeta.updatedAt) : 0;
+
+        // If Drive has newer settings (or local has never synced yet), pull from Drive
+        if (!localTs || remoteTs >= localTs || !silent) {
+          const applied = applyRemoteAppConfig(remoteCfg);
+          if (applied) {
+            try {
+              localStorage.setItem(DRIVE_CONFIG_STORAGE_META_KEY, JSON.stringify({ updatedAt: remoteCfg.updatedAt || new Date().toISOString() }));
+            } catch (e) {}
+            if (typeof generateSheet === 'function' && parsedRows.length > 0) {
+              generateSheet();
+            }
+          }
+        }
+        return true;
+      } else {
+        // cmt_app_config.json doesn't exist in Drive yet -> push initial snapshot so it gets created automatically
+        await pushDriveConfigToGoogleDrive(true);
+        return true;
+      }
+    } catch (err) {
+      console.warn('Drive Config Pull skipped/fallback to localStorage:', err);
+      return false;
+    } finally {
+      isSyncingDriveConfig = false;
+      if (btn && !silent) {
+        btn.disabled = false;
+        btn.innerText = '☁️ Sync Config';
+      }
+    }
+  }
+
+  async function pushDriveConfigToGoogleDrive(silent) {
+    try {
+      const snapshot = buildAppConfigSnapshot();
+      const currentHash = computeConfigHash(snapshot);
+      if (silent && currentHash === lastSyncedConfigHash) return true;
+
+      const sep = LIVE_ROSTER_SCRIPT_URL.includes('?') ? '&' : '?';
+      const url = LIVE_ROSTER_SCRIPT_URL + sep + 'action=saveConfig&fileName=cmt_app_config.json';
+
+      const resp = await fetch(url, {
+        method: 'POST',
+        redirect: 'follow',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          action: 'saveConfig',
+          fileName: 'cmt_app_config.json',
+          config: snapshot
+        })
+      });
+
+      if (resp.ok) {
+        lastSyncedConfigHash = currentHash;
+        try {
+          localStorage.setItem(DRIVE_CONFIG_STORAGE_META_KEY, JSON.stringify({ updatedAt: snapshot.updatedAt }));
+        } catch (e) {}
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.warn('Drive Config Auto-Push error:', err);
+      return false;
+    }
+  }
+
+  function scheduleDriveConfigAutoPush() {
+    clearTimeout(driveConfigSyncTimer);
+    driveConfigSyncTimer = setTimeout(function() {
+      pushDriveConfigToGoogleDrive(true);
+    }, 1500);
+  }
+
+  async function manualSyncDriveConfigNow() {
+    const st = document.getElementById('statusText');
+    if (st) st.innerText = '☁️ Syncing App Config (cmt_app_config.json) with Google Drive...';
+    const pushed = await pushDriveConfigToGoogleDrive(false);
+    const pulled = await pullDriveConfigFromGoogleDrive(false);
+    if (st) {
+      st.style.color = (pushed || pulled) ? '#0f766e' : '#b45309';
+      st.innerText = (pushed || pulled)
+        ? '✅ Google Drive Config (cmt_app_config.json) Synced! (Page Layout, Typography, JSB Text, Fixed CTO & PDA List)'
+        : '⚠️ Local Config Saved (Deploy updated Apps Script code to enable Drive JSON sync)';
+    }
+  }
+
   let hasBootedCmtApp = false;
   async function initCmtRosterApp() {
     if (hasBootedCmtApp) return;
@@ -8001,8 +8625,11 @@
 
     isRestoringRosterFromStorage = false;
     applyPageLayoutToCss();
+    applyToolbarVisibility();
     applyTypographySettings();
     restoreJsbPermanentStateFromLocalStorage();
+    autoSyncSafetyTopics(false);
+    pullDriveConfigFromGoogleDrive(true);
     saveActiveSessionState();
     updatePdaStandbyFooter();
     autoFitJsbFormPage();
@@ -8033,16 +8660,15 @@ const DRIVE_TOPICS_JSON_FILE_ID = "";
 function applySyncedSafetyTopics(data, forceOverwrite) {
   if (!data || typeof data !== "object") return;
 
-  const newMonthly = (data.monthlyTopic || data.monthly || "").toString().trim();
-  const newWeekly = (data.weeklyTopic || data.weekly || "").toString().trim();
-  if (!forceOverwrite && (jsbPermanentState.monthlyTopic !== null || jsbPermanentState.weeklyTopic !== null)) {
-    return;
-  }
+  const payload = (data.data && typeof data.data === "object") ? data.data : data;
+  const newMonthly = (payload.monthlyTopic || payload.monthly || payload.monthly_topic || "").toString().trim();
+  const newWeekly = (payload.weeklyTopic || payload.weekly || payload.weekly_topic || "").toString().trim();
 
   if (!newMonthly && !newWeekly) return;
 
   if (newMonthly) {
     savedMonthlyTopic = newMonthly;
+    jsbPermanentState.monthlyTopic = newMonthly;
     const mEl = document.getElementById("jsb_monthly_topic");
     const mInput = document.getElementById("inputMonthlyTopic");
     if (mEl) mEl.innerText = newMonthly;
@@ -8052,6 +8678,7 @@ function applySyncedSafetyTopics(data, forceOverwrite) {
 
   if (newWeekly) {
     savedWeeklyTopic = newWeekly;
+    jsbPermanentState.weeklyTopic = newWeekly;
     const wEl = document.getElementById("jsb_weekly_topic");
     const wInput = document.getElementById("inputWeeklyTopic");
     if (wEl) wEl.innerText = newWeekly;
@@ -8059,9 +8686,10 @@ function applySyncedSafetyTopics(data, forceOverwrite) {
     try { localStorage.setItem("cmt_jsb_weekly_topic", newWeekly); } catch (e) {}
   }
 
-  if (forceOverwrite) {
-    saveJsbPermanentStateToLocalStorage();
-  }
+  try {
+    localStorage.setItem(JSB_PERMANENT_KEY, JSON.stringify(jsbPermanentState));
+  } catch (e) {}
+
   if (typeof autoFitJsbFormPage === "function") {
     autoFitJsbFormPage();
   }
@@ -8081,21 +8709,40 @@ async function autoSyncSafetyTopics(showAlertOnDone) {
 
     if (DRIVE_TOPICS_JSON_FILE_ID) {
       data = await fetchJsonFromGoogleDriveFile(DRIVE_TOPICS_JSON_FILE_ID);
-    } else if (SAFETY_TOPICS_API) {
-      const sep = SAFETY_TOPICS_API.includes("?") ? "&" : "?";
-      const res = await fetch(SAFETY_TOPICS_API + sep + "_t=" + Date.now(), {
+    }
+    if (!data && SAFETY_TOPICS_API) {
+      try {
+        const sep = SAFETY_TOPICS_API.includes("?") ? "&" : "?";
+        const res = await fetch(SAFETY_TOPICS_API + sep + "fileName=safety_topics.json&_t=" + Date.now(), {
+          redirect: "follow",
+          cache: "no-store"
+        });
+        if (res.ok) {
+          data = await res.json();
+        }
+      } catch (e1) {
+        console.warn("Primary SAFETY_TOPICS_API fetch failed, trying Drive fallback:", e1);
+      }
+    }
+    if (!data && typeof LIVE_ROSTER_SCRIPT_URL !== "undefined" && LIVE_ROSTER_SCRIPT_URL) {
+      const sep2 = LIVE_ROSTER_SCRIPT_URL.includes("?") ? "&" : "?";
+      const res2 = await fetch(LIVE_ROSTER_SCRIPT_URL + sep2 + "action=getConfig&fileName=safety_topics.json&_t=" + Date.now(), {
         redirect: "follow",
         cache: "no-store"
       });
-      if (!res.ok) throw new Error("Topics API failed: " + res.status);
-      data = await res.json();
+      if (res2.ok) {
+        const json2 = await res2.json();
+        data = (json2 && json2.config) ? json2.config : json2;
+      }
     }
 
     if (data) {
-      applySyncedSafetyTopics(data, !!showAlertOnDone);
+      applySyncedSafetyTopics(data, true);
       if (showAlertOnDone) {
-        alert("✅ Weekly & Monthly Safety Topics synced from Live API!");
+        alert("✅ Weekly & Monthly Safety Topics synced from safety_topics.json!");
       }
+    } else if (showAlertOnDone) {
+      alert("⚠️ Could not read safety_topics.json.");
     }
   } catch (err) {
     console.warn("Safety Topics Auto-Sync Error:", err);
