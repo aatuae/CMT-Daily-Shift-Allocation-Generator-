@@ -8760,5 +8760,59 @@ if (document.readyState === "loading") {
 setInterval(function() { autoSyncSafetyTopics(false); }, 1800000);
 
 </script>
+<style>
+  /* v97.6: hover "×" on the right side of each allocation row (like PK15) */
+  #cmtRowX { position: absolute; display: none; z-index: 900; width: 18px; height: 18px; line-height: 16px; text-align: center;
+    font-size: 15px; font-weight: 900; color: #dc2626; background: #fff; border: 1px solid #fca5a5; border-radius: 4px;
+    cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.15); user-select: none; }
+  #cmtRowX:hover { background: #dc2626; color: #fff; border-color: #991b1b; }
+  @media print { #cmtRowX { display: none !important; } }
+</style>
+<script>
+  (function() {
+    var CMT_X_BODIES = ['cmt1_body', 'cmt2_body', 'cto_body', 'ldr1_body', 'ldr2_body', 'ldrcto_body', 'shortage_body'];
+    var xBtn = null, xRow = null, hideTimer = null;
+    function ensureBtn() {
+      if (xBtn) return xBtn;
+      xBtn = document.createElement('div');
+      xBtn.id = 'cmtRowX';
+      xBtn.className = 'no-print';
+      xBtn.title = 'Delete row';
+      xBtn.textContent = '×';
+      xBtn.addEventListener('mouseenter', function() { clearTimeout(hideTimer); });
+      xBtn.addEventListener('mouseleave', scheduleHide);
+      xBtn.addEventListener('click', function(e) {
+        e.preventDefault(); e.stopPropagation();
+        var tr = xRow; hide();
+        if (!tr || !tr.parentNode) return;
+        var idTd = tr.cells[1], nmTd = tr.cells[2];
+        var idTxt = idTd ? idTd.innerText.trim() : '';
+        var nmTxt = nmTd ? nmTd.innerText.replace(/\s+/g, ' ').trim() : '';
+        if ((idTxt || nmTxt) && !confirm('Is row ko delete karna hai?\n' + idTxt + ' ' + nmTxt)) return;
+        if (typeof removeStaffRow === 'function') removeStaffRow(tr); else tr.remove();
+      });
+      document.body.appendChild(xBtn);
+      return xBtn;
+    }
+    function hide() { clearTimeout(hideTimer); if (xBtn) xBtn.style.display = 'none'; xRow = null; }
+    function scheduleHide() { clearTimeout(hideTimer); hideTimer = setTimeout(hide, 250); }
+    function showFor(tr) {
+      var b = ensureBtn();
+      clearTimeout(hideTimer);
+      xRow = tr;
+      var r = tr.getBoundingClientRect();
+      b.style.left = (window.scrollX + r.right + 3) + 'px';
+      b.style.top = (window.scrollY + r.top + Math.max(0, (r.height - 18) / 2)) + 'px';
+      b.style.display = 'block';
+    }
+    document.addEventListener('mouseover', function(e) {
+      var tr = e.target && e.target.closest ? e.target.closest('tr') : null;
+      if (tr && tr.parentNode && CMT_X_BODIES.indexOf(tr.parentNode.id) !== -1) { showFor(tr); return; }
+      if (xBtn && e.target !== xBtn) scheduleHide();
+    });
+    window.addEventListener('scroll', hide, true);
+    window.addEventListener('beforeprint', hide);
+  })();
+</script>
 </body>
 </html>
