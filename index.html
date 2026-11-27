@@ -1325,6 +1325,21 @@
     .live-loader-overlay { display: none !important; }
   }
 
+
+  /* v97.7 Floating Format Toolbar: shows only while editing text, next to the edited cell */
+  .rich-format-toolbar {
+    position: fixed !important;
+    z-index: 9000;
+    display: none;
+    max-width: calc(100vw - 16px);
+    padding: 4px 6px;
+    gap: 4px;
+    border: 1px solid #94a3b8;
+    border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.22);
+  }
+  .rich-format-toolbar.rtb-floating-visible { display: flex; }
+
 </style>
 </head>
 <body>
@@ -8822,6 +8837,53 @@ setInterval(function() { autoSyncSafetyTopics(false); }, 1800000);
     });
     window.addEventListener('scroll', hide, true);
     window.addEventListener('beforeprint', hide);
+  })();
+</script>
+<script>
+  /* v97.7 Floating Format Toolbar logic */
+  (function() {
+    var tb = document.getElementById('richFormatToolbar');
+    if (!tb) return;
+    document.body.appendChild(tb);
+    var curEl = null;
+    function hideTb() { tb.classList.remove('rtb-floating-visible'); curEl = null; }
+    function placeTb() {
+      if (!curEl || !document.body.contains(curEl)) { hideTb(); return; }
+      tb.classList.add('rtb-floating-visible');
+      var r = curEl.getBoundingClientRect();
+      var h = tb.offsetHeight, w = tb.offsetWidth;
+      var top = r.top - h - 6;
+      if (top < 4) {
+        top = r.bottom + 6;
+        if (top + h > window.innerHeight - 4) top = 4;
+      }
+      var left = r.left;
+      if (left + w > window.innerWidth - 8) left = window.innerWidth - w - 8;
+      if (left < 8) left = 8;
+      tb.style.top = top + 'px';
+      tb.style.left = left + 'px';
+    }
+    document.addEventListener('focusin', function(e) {
+      var t = e.target;
+      if (tb.contains(t)) return;
+      if (t && t.isContentEditable) {
+        curEl = (t.closest && t.closest('[contenteditable="true"]')) || t;
+        placeTb();
+      } else {
+        hideTb();
+      }
+    });
+    document.addEventListener('mousedown', function(e) {
+      if (tb.contains(e.target)) return;
+      if (e.target && e.target.isContentEditable) return;
+      setTimeout(function() {
+        var a = document.activeElement;
+        if (!(a && a.isContentEditable) && !tb.contains(a)) hideTb();
+      }, 0);
+    });
+    window.addEventListener('scroll', function() { if (curEl) placeTb(); }, true);
+    window.addEventListener('resize', function() { if (curEl) placeTb(); });
+    window.addEventListener('beforeprint', hideTb);
   })();
 </script>
 </body>
