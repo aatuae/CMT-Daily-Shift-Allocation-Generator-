@@ -1398,7 +1398,6 @@
       <button type="button" class="btn-secondary" style="background:#0284c7;" onclick="openCtoCycleModal()">🔄 Fixed CTO &amp; Cycle Rules</button>
       <button type="button" class="btn-secondary" style="background:#7c3aed;" onclick="openTopicsModal()">📝 Update Weekly/Monthly Topics</button>
       <button type="button" class="btn-secondary" style="background:#b45309;" onclick="openPageLayoutModal()">📐 Page Layout</button>
-      <button type="button" class="btn-primary" id="btnGenerate">⚡ Generate Sheet</button>
       <button type="button" class="btn-success" style="background:#0d9488;" onclick="exportToExcel()" title="Export Allocation Sheet only to Excel">📊 Export Allocation (Excel)</button>
       <button type="button" class="btn-success" style="background:#1d4ed8;" onclick="exportJsbToWord()" title="Export Job Safety Briefing & Signature Sheet in exact MS Word format">📄 Export JSB (Word)</button>
       <button type="button" class="btn-secondary" style="background:#0f766e;" id="btnSyncDriveConfig" onclick="manualSyncDriveConfigNow()" title="Auto-Sync Page Setup, Typography, JSB Text, Fixed CTO IDs & PDA List with Google Drive (cmt_app_config.json)">☁️ Sync Config</button>
@@ -3945,10 +3944,6 @@
     generateSheet();
   });
   document.getElementById('btnFilterAreas').addEventListener('click', openAreaModal);
-  document.getElementById('btnGenerate').addEventListener('click', function() {
-    generateSheet();
-    exportToExcel();
-  });
   document.getElementById('btnResetAreas').addEventListener('click', resetDefaultAreas);
   document.getElementById('btnSaveAreas').addEventListener('click', saveAreaSelection);
   document.getElementById('btnSelectAllAreas').addEventListener('click', function() {
