@@ -1415,7 +1415,7 @@
       <button type="button" class="btn-secondary" style="background:#b45309;" onclick="openPageLayoutModal()">📐 Page Layout</button>
       <button type="button" class="btn-success" style="background:#0d9488;" onclick="exportToExcel()" title="Export Allocation Sheet only to Excel">📊 Export Allocation (Excel)</button>
       <button type="button" class="btn-success" style="background:#1d4ed8;" onclick="exportJsbToWord()" title="Export Job Safety Briefing & Signature Sheet in exact MS Word format">📄 Export JSB (Word)</button>
-      <button type="button" class="btn-secondary" style="background:#0f766e;" id="btnSyncDriveConfig" onclick="manualSyncDriveConfigNow()" title="Auto-Sync Page Setup, Typography, JSB Text, Fixed CTO IDs & PDA List with Google Drive (cmt_app_config.json)">☁️ Sync Config</button>
+      <button type="button" class="btn-secondary" style="background:#0f766e;" id="btnSyncDriveConfig" onclick="manualSyncDriveConfigNow()" title="Save changes, then reload settings from Google Drive (common file + this sequence file)">☁️ Sync Config</button>
       <button type="button" class="btn-success" onclick="printSinglePageA4()">🖨️ Print / Save PDF</button>
     </div>
   </div>
@@ -2318,11 +2318,19 @@
     };
   }
 
+  // Fixed CTO applies on regular (non-OT) duty in the person's OWN sequence (any sequence, not only 2).
+  // If the roster has no sequence for this person, the tick is honoured.
+  function isOwnSeqRegularDuty(person, sheetSeq) {
+    if (!person || person.isOT) return false;
+    const own = String(person.seqNo || '').trim().toUpperCase();
+    return !own || own === String(sheetSeq || '').trim().toUpperCase();
+  }
+
   // Determine expected section for a 3x3 regular staff member using BOTH Excel roster columns (3 days off -> next cycle auto-switch) AND saved cycle history
-  function resolveSectionFromCycleHistory(empId, targetDateStr, isSeq2Regular, personObj, targetColIdx) {
+  function resolveSectionFromCycleHistory(empId, targetDateStr, isOwnSeqRegular, personObj, targetColIdx) {
     if (!empId) return null;
     const cleanId = normalizeIdStr(empId);
-    if (fixedCtoIds.includes(cleanId) && isSeq2Regular) {
+    if (fixedCtoIds.includes(cleanId.toUpperCase()) && isOwnSeqRegular) {
       return 'CTO';
     }
     if (!enableCycleShuffle) return null;
@@ -2526,13 +2534,54 @@
     document.getElementById('ctoCycleModal').style.display = 'flex';
   }
 
+  let pendingCtoChangedIds = [];
+
+  // Move only the rows whose Fixed CTO tick changed inside the saved layout; all other manual edits stay.
+  function applyCtoTickChangesToSavedEdits(key, generated) {
+    const ids = pendingCtoChangedIds;
+    pendingCtoChangedIds = [];
+    const saved = key && shiftSavedEdits[key];
+    if (!ids.length || !saved || !saved.tables) return;
+    const upper = function(v) { return normalizeIdStr(v).toUpperCase(); };
+    ids.forEach(function(id) {
+      const target = Object.keys(generated).find(function(tb) {
+        return generated[tb].some(function(p) { return upper(p.empId) === id; });
+      });
+      if (!target) return;
+      const group = target.indexOf('ldr') === 0 ? ['ldr1_body', 'ldr2_body', 'ldrcto_body'] : ['cmt1_body', 'cmt2_body', 'cto_body'];
+      group.forEach(function(tbId) {
+        if (tbId === target) return;
+        const rows = saved.tables[tbId] || [];
+        const i = rows.findIndex(function(c) { return upper(c[1]) === id; });
+        if (i === -1) return;
+        const row = rows.splice(i, 1)[0];
+        const dest = saved.tables[target] || (saved.tables[target] = []);
+        const blank = dest.findIndex(function(c) { return !c[1] && !c[2]; });
+        if (blank === -1) dest.push(row); else dest.splice(blank, 0, row);
+      });
+    });
+  }
+
   function saveCtoCycleSettings() {
     enableCycleShuffle = document.getElementById('chkEnableCycleShuffle').checked;
     const checks = document.querySelectorAll('#fixedCtoCheckboxes input[type="checkbox"]:checked');
+    const before = fixedCtoIds.map(function(x) { return String(x).trim().toUpperCase(); });
+    syncManualFieldsFromDom();
+    captureCurrentDateShiftEdits();
     fixedCtoIds = Array.from(checks).map(function(c) { return String(c.value).trim().toUpperCase(); });
+    pendingCtoChangedIds = fixedCtoIds.filter(function(x) { return !before.includes(x); })
+      .concat(before.filter(function(x) { return !fixedCtoIds.includes(x); }));
+    // A new tick/untick replaces any earlier manual section pin for that person on this date + shift
+    const prefs = getPrefsForCurrentDateShift();
+    Object.keys(prefs).forEach(function(id) {
+      if (prefs[id] !== 'SHORTAGE' && pendingCtoChangedIds.includes(normalizeIdStr(id).toUpperCase())) delete prefs[id];
+    });
+    savePrefsStorage();
     saveCycleRulesStorage();
     document.getElementById('ctoCycleModal').style.display = 'none';
+    const hadChanges = pendingCtoChangedIds.length > 0;
     generateSheet();
+    if (hadChanges) recalculateAllTablesAndJsb(false);
   }
 
   function clearCycleHistoryMemory() {
@@ -2617,6 +2666,11 @@
   }
 
   function savePrefsStorage() {
+    savePrefsStorageLocalOnly();
+    scheduleDriveConfigAutoPush();
+  }
+
+  function savePrefsStorageLocalOnly() {
     try {
       localStorage.setItem('cmt_staff_prefs_by_shift', JSON.stringify(staffSectionPrefsByShift));
       localStorage.setItem('cmt_staff_manual_fields_by_shift', JSON.stringify(staffManualFieldsByShift));
@@ -2624,6 +2678,7 @@
   }
 
   function syncManualFieldsFromDom() {
+    if (isConfigLoading()) return;
     const key = getCurrentDateShiftKey();
     if (!key) return;
     const fieldsMap = getManualFieldsForCurrentDateShift();
@@ -2697,7 +2752,7 @@
   }
 
   function captureCurrentDateShiftEdits() {
-    if (isApplyingSavedState) return;
+    if (isApplyingSavedState || isConfigLoading()) return;
     const key = getCurrentDateShiftKey();
     if (!key) return;
 
@@ -2761,6 +2816,7 @@
       }
       localStorage.setItem('cmt_shift_saved_edits', JSON.stringify(shiftSavedEdits));
     } catch (e) {}
+    scheduleDriveConfigAutoPush();
   }
 
   function applySavedEditsIfPresent(key) {
@@ -3209,7 +3265,7 @@
   } catch (e) {}
 
   function saveJsbPermanentStateToLocalStorage() {
-    if (isApplyingSavedState) return;
+    if (isApplyingSavedState || isConfigLoading()) return;
     const areaEl = document.getElementById('jsb_area');
     const mEl = document.getElementById('jsb_monthly_topic');
     const wEl = document.getElementById('jsb_weekly_topic');
@@ -4396,6 +4452,9 @@
       return;
     }
 
+    const sheetSeq = detectSheetSequence(colIdx, shiftChoice);
+    activateSequence(sheetSeq);
+
     const filtered = parsedRows.filter(function(r) {
       return selectedAreas.length === 0 || selectedAreas.includes(r.teamId);
     });
@@ -4591,7 +4650,9 @@
       return entries[0][0];
     }
 
-    const primarySeq = getTopSeq(tlSeqCounts) ||
+    const primarySeq = (sheetSeq && Object.keys(allStaffSeqCounts).concat(Object.keys(tlSeqCounts), Object.keys(supSeqCounts))
+                         .find(function(k) { return normalizeSeq(k) === sheetSeq; })) ||
+                       getTopSeq(tlSeqCounts) ||
                        getTopSeq(coreNonOtStaffSeqCounts) ||
                        getTopSeq(nonOtStaffSeqCounts) ||
                        getTopSeq(supSeqCounts) ||
@@ -4801,9 +4862,9 @@
         if (pref === 'CTO') { cto.push(p); return; }
         if (pref === 'CMT-1') { cmt1.push(p); return; }
 
-        // Fixed CTO rule (e.g. Adeel Asghar 497038 stays in CTO ONLY in Shift/Sequence 2 regular duty; if on OT or another shift sequence, goes to CMT-1 or CMT-2)
-        const isSeq2Regular = (!p.isOT && String(displaySeq).trim() === '2');
-        if (fixedCtoIds.includes(String(p.empId).trim()) && isSeq2Regular) {
+        // Fixed CTO rule: ticked staff stay in CTO on their own sequence's regular duty; on OT or another sequence they go to CMT-1 or CMT-2
+        const isOwnSeqRegular = isOwnSeqRegularDuty(p, displaySeq);
+        if (fixedCtoIds.includes(String(p.empId || '').trim().toUpperCase()) && isOwnSeqRegular) {
           cto.push(p);
           return;
         }
@@ -4827,7 +4888,7 @@
         }
 
         // Check 3x3 / 6-day cycle history for EO (same 3-day cycle = keep side, after 3-day off gap = auto-switch CMT-1 <-> CMT-2)
-        const cycleSide = resolveSectionFromCycleHistory(p.empId, activeDateStr, isSeq2Regular, p, colIdx);
+        const cycleSide = resolveSectionFromCycleHistory(p.empId, activeDateStr, isOwnSeqRegular, p, colIdx);
         if (cycleSide === 'CMT-1') {
           cmt1.push(p);
           return;
@@ -5057,9 +5118,9 @@
     remainingForCmt.forEach(function(p) {
       const cycleInfo = detectLoaderCycleInfo(p, colIdx, shiftChoice);
       const ldrPat = detectStaffRosterPattern(p, colIdx);
-      const isSeq2RegLdr = (!p.isOT && String(displaySeq).trim() === '2');
+      const isOwnSeqRegLdr = isOwnSeqRegularDuty(p, displaySeq);
       const ldrCycleSwitchSide = (ldrPat.pattern === '3x3' && !p.isOT)
-        ? resolveSectionFromCycleHistory(p.empId, activeDateStr, isSeq2RegLdr, p, colIdx)
+        ? resolveSectionFromCycleHistory(p.empId, activeDateStr, isOwnSeqRegLdr, p, colIdx)
         : null;
 
       if (cycleInfo) {
@@ -5158,6 +5219,10 @@
     );
 
     const dsKey = getCurrentDateShiftKey();
+    applyCtoTickChangesToSavedEdits(dsKey, {
+      cmt1_body: cmt1, cmt2_body: cmt2, cto_body: cto,
+      ldr1_body: ldr1, ldr2_body: ldr2, ldrcto_body: ldrCto
+    });
     const hasSavedEdits = dsKey && applySavedEditsIfPresent(dsKey);
 
     // Record non-OT regular staff placements into Cycle History Memory so next cycle auto-flips!
@@ -8354,215 +8419,406 @@
   }
 
 
-  // ======================== GOOGLE DRIVE JSON AUTO-SYNC (cmt_app_config.json) ========================
-  const DRIVE_CONFIG_STORAGE_META_KEY = 'cmt_drive_config_sync_meta_v1';
-  let driveConfigSyncTimer = null;
-  let isSyncingDriveConfig = false;
-  let lastSyncedConfigHash = '';
+  // ======================== GOOGLE DRIVE JSON SYNC: COMMON + PER-SEQUENCE ========================
+  // cmt_app_config.json    -> common: page paper settings + PDA directory
+  // cmt_config_seqN.json   -> sequence N: Fixed CTO, JSB text, areas, typography, allocation
+  // Rule: a file is written ONLY after it has been loaded successfully (or confirmed as not existing).
+  var COMMON_CONFIG_FILE = 'cmt_app_config.json';
+  var PAPER_KEYS = ['paperSize', 'orientation', 'margin', 'fitHeight', 'centerHoriz', 'showGridlines', 'enableToolbar'];
+  var JSB_KEYS = ['area', 'exposuresHtml', 'controlMechanismHtml', 'jobPauseHtml', 'touchPointsBulletsHtml', 'debriefingHtml', 'followupHtml', 'nearmissHtml'];
+  var JSB_IDS = ['jsb_area', 'jsb_exposures_list', 'jsb_control_mechanism', 'jsb_job_pause', 'jsb_touch_points_bullets', 'jsb_debriefing', 'jsb_followup', 'jsb_nearmiss'];
+  var JSB_DEFAULT_HTML = JSB_IDS.map(function(id) { const el = document.getElementById(id); return el ? el.innerHTML : null; });
+  var MAX_SYNC_SHEETS_PER_SEQ = 14;
+  var driveConfigSyncTimer = null;
+  var activeSeq = '';
+  var seqState = 'idle';      // idle | loading | ready | failed
+  var commonState = 'idle';
+  var commonRaw = {};
+  var commonLoadPromise = null;
+  var seqLoadToken = 0;
+  var lastPushedHash = {};
+  var pushChain = {};
+  var keySeqMap = {};
+  try { keySeqMap = JSON.parse(localStorage.getItem('cmt_key_seq_map') || '{}'); } catch (e) {}
 
-  function buildAppConfigSnapshot() {
-    return {
-      schemaVersion: 1,
-      configFileName: 'cmt_app_config.json',
-      updatedAt: new Date().toISOString(),
-      pageLayoutConfig: pageLayoutConfig,
-      jsbPermanentState: (function() {
-        const cleanJsb = Object.assign({}, jsbPermanentState);
-        delete cleanJsb.monthlyTopic;
-        delete cleanJsb.weeklyTopic;
-        return cleanJsb;
-      })(),
-      fixedCtoIds: fixedCtoIds,
-      enableCycleShuffle: enableCycleShuffle,
-      pdaDirectory: pdaDirectory,
-      showPdaPhoneOption: showPdaPhoneOption,
-      showPdaStandbyOption: showPdaStandbyOption,
-      selectedAreas: selectedAreas
-    };
+  function copyJson(v) { return JSON.parse(JSON.stringify(v)); }
+  function storeLocal(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function seqFileName(seq) { return 'cmt_config_seq' + seq + '.json'; }
+  function isConfigLoading() { return seqState === 'loading' || commonState === 'loading'; }
+
+  function normalizeSeq(v) {
+    const m = String(v || '').trim().match(/^\D{0,6}([1-4])(?!\d)/);
+    return m ? m[1] : '';
   }
 
-  function computeConfigHash(snapshot) {
-    const copy = Object.assign({}, snapshot);
-    delete copy.updatedAt;
-    return JSON.stringify(copy);
+  // Sheet sequence from the roster (independent of the area filter): TL first, then staff, then supervisors
+  function detectSheetSequence(colIdx, shiftChoice) {
+    const counts = [{}, {}, {}, {}];
+    parsedRows.forEach(function(r) {
+      const info = parseRosterCell((r.rawRow || [])[colIdx]);
+      const seq = normalizeSeq(r.seqNo);
+      if (!seq || info.type !== 'WORKING' || info.shiftGroup !== shiftChoice) return;
+      const role = getRoleCategory(r);
+      const isStaff = (role === 'AA' || role === 'EO' || role === 'LDR');
+      let level = -1;
+      if (role === 'TL' && !info.isOT) level = 0;
+      else if (isStaff && !info.isOT) level = 1;
+      else if (role === 'COP' || role === 'DO') level = 2;
+      else if (isStaff) level = 3;
+      if (level >= 0) counts[level][seq] = (counts[level][seq] || 0) + 1;
+    });
+    for (let i = 0; i < counts.length; i++) {
+      const top = Object.entries(counts[i]).sort(function(a, b) { return b[1] - a[1]; })[0];
+      if (top) return top[0];
+    }
+    return '';
   }
 
-  function applyRemoteAppConfig(cfg) {
-    if (!cfg || typeof cfg !== 'object') return false;
-    let changed = false;
-
-    if (cfg.pageLayoutConfig && typeof cfg.pageLayoutConfig === 'object') {
-      pageLayoutConfig = Object.assign({}, pageLayoutConfig, cfg.pageLayoutConfig);
-      try { localStorage.setItem('cmt_page_layout_cfg', JSON.stringify(pageLayoutConfig)); } catch (e) {}
-      applyPageLayoutToCss();
-    applyToolbarVisibility();
-      applyTypographySettings();
-      changed = true;
+  function setSyncStatus(text, ok) {
+    let el = document.getElementById('cmtSyncBadge');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'cmtSyncBadge';
+      el.className = 'cmt-sync-ui';
+      el.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:99998;padding:5px 10px;border-radius:6px;color:#fff;font:700 12px sans-serif;';
+      document.body.appendChild(el);
+      const css = document.createElement('style');
+      css.textContent = '@media print { .cmt-sync-ui { display:none !important; } }';
+      document.head.appendChild(css);
     }
-
-    if (cfg.jsbPermanentState && typeof cfg.jsbPermanentState === 'object') {
-      const remoteJsbCopy = Object.assign({}, cfg.jsbPermanentState);
-      delete remoteJsbCopy.monthlyTopic;
-      delete remoteJsbCopy.weeklyTopic;
-      jsbPermanentState = Object.assign({}, jsbPermanentState, remoteJsbCopy);
-      try {
-        localStorage.setItem(JSB_PERMANENT_KEY, JSON.stringify(jsbPermanentState));
-      } catch (e) {}
-      restoreJsbPermanentStateFromLocalStorage();
-      changed = true;
-    }
-
-    if (Array.isArray(cfg.fixedCtoIds)) {
-      fixedCtoIds = cfg.fixedCtoIds.map(function(x) { return String(x).trim().toUpperCase(); });
-      if (typeof cfg.enableCycleShuffle === 'boolean') {
-        enableCycleShuffle = cfg.enableCycleShuffle;
-      }
-      saveCycleRulesStorage();
-      changed = true;
-    }
-
-    if (Array.isArray(cfg.pdaDirectory) && cfg.pdaDirectory.length > 0) {
-      pdaDirectory = cfg.pdaDirectory;
-      if (typeof cfg.showPdaPhoneOption === 'boolean') {
-        showPdaPhoneOption = cfg.showPdaPhoneOption;
-        const chkPh = document.getElementById('chkShowPdaPhone');
-        if (chkPh) chkPh.checked = showPdaPhoneOption;
-        document.body.classList.toggle('hide-pda-phone', !showPdaPhoneOption);
-      }
-      if (typeof cfg.showPdaStandbyOption === 'boolean') {
-        showPdaStandbyOption = cfg.showPdaStandbyOption;
-        const chkSb = document.getElementById('chkShowPdaStandby');
-        if (chkSb) chkSb.checked = showPdaStandbyOption;
-      }
-      try {
-        localStorage.setItem('cmt_pda_directory', JSON.stringify(pdaDirectory));
-        localStorage.setItem('cmt_show_pda_phone', String(showPdaPhoneOption));
-        localStorage.setItem('cmt_show_pda_standby', String(showPdaStandbyOption));
-      } catch (e) {}
-      updatePdaStandbyFooter();
-      changed = true;
-    }
-
-    if (Array.isArray(cfg.selectedAreas) && cfg.selectedAreas.length > 0) {
-      selectedAreas = cfg.selectedAreas;
-      try { localStorage.setItem('cmt_selected_areas', JSON.stringify(selectedAreas)); } catch (e) {}
-      const btnAreas = document.getElementById('btnFilterAreas');
-      if (btnAreas) btnAreas.innerText = '⚙️ Filter Areas (' + selectedAreas.length + ')';
-      changed = true;
-    }
-
-    if (changed) {
-      lastSyncedConfigHash = computeConfigHash(buildAppConfigSnapshot());
-    }
-    return changed;
+    el.style.background = ok === false ? '#b45309' : '#0f766e';
+    el.textContent = text;
   }
 
-  async function pullDriveConfigFromGoogleDrive(silent) {
-    if (isSyncingDriveConfig) return false;
-    isSyncingDriveConfig = true;
-    const btn = document.getElementById('btnSyncDriveConfig');
-    if (btn && !silent) {
-      btn.disabled = true;
-      btn.innerText = '⏳ Syncing Config...';
+  // Blocks editing while settings are loading, so nothing typed gets overwritten by the JSON
+  function refreshSyncOverlay() {
+    let ov = document.getElementById('cmtSyncOverlay');
+    if (!ov) {
+      ov = document.createElement('div');
+      ov.id = 'cmtSyncOverlay';
+      ov.className = 'cmt-sync-ui';
+      ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;color:#fff;font:700 16px sans-serif;text-align:center;padding:20px;';
+      ov.textContent = '☁️ Settings Google Drive se load ho rahi hain...';
+      document.body.appendChild(ov);
     }
+    const busy = isConfigLoading();
+    ov.style.display = busy ? 'flex' : 'none';
+    if (busy && document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  }
+
+  async function fetchDriveJson(fileName) {
+    const ctl = new AbortController();
+    const timer = setTimeout(function() { ctl.abort(); }, 20000);
     try {
       const sep = LIVE_ROSTER_SCRIPT_URL.includes('?') ? '&' : '?';
-      const url = LIVE_ROSTER_SCRIPT_URL + sep + 'action=getConfig&fileName=cmt_app_config.json&_t=' + Date.now();
-      const resp = await fetch(url, { redirect: 'follow', cache: 'no-store' });
+      const resp = await fetch(LIVE_ROSTER_SCRIPT_URL + sep + 'action=getConfig&fileName=' + fileName + '&_t=' + Date.now(),
+        { redirect: 'follow', cache: 'no-store', signal: ctl.signal });
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
       const data = await resp.json();
-
-      const remoteCfg = (data && data.config && typeof data.config === 'object')
-        ? data.config
-        : ((data && data.status === 'success' && data.data && typeof data.data === 'object') ? data.data : null);
-
-      if (remoteCfg && remoteCfg.schemaVersion) {
-        const localMeta = JSON.parse(localStorage.getItem(DRIVE_CONFIG_STORAGE_META_KEY) || '{}');
-        const remoteTs = remoteCfg.updatedAt ? Date.parse(remoteCfg.updatedAt) : 0;
-        const localTs = localMeta.updatedAt ? Date.parse(localMeta.updatedAt) : 0;
-
-        // If Drive has newer settings (or local has never synced yet), pull from Drive
-        if (!localTs || remoteTs >= localTs || !silent) {
-          const applied = applyRemoteAppConfig(remoteCfg);
-          if (applied) {
-            try {
-              localStorage.setItem(DRIVE_CONFIG_STORAGE_META_KEY, JSON.stringify({ updatedAt: remoteCfg.updatedAt || new Date().toISOString() }));
-            } catch (e) {}
-            if (typeof generateSheet === 'function' && parsedRows.length > 0) {
-              generateSheet();
-            }
-          }
-        }
-        return true;
-      } else {
-        // cmt_app_config.json doesn't exist in Drive yet -> push initial snapshot so it gets created automatically
-        await pushDriveConfigToGoogleDrive(true);
-        return true;
-      }
-    } catch (err) {
-      console.warn('Drive Config Pull skipped/fallback to localStorage:', err);
-      return false;
+      if (data && data.status === 'success' && data.config) return data.config;
+      if (data && data.status === 'not_found') return null;
+      throw new Error('Unexpected config response');
     } finally {
-      isSyncingDriveConfig = false;
-      if (btn && !silent) {
-        btn.disabled = false;
-        btn.innerText = '☁️ Sync Config';
-      }
+      clearTimeout(timer);
     }
   }
 
-  async function pushDriveConfigToGoogleDrive(silent) {
-    try {
-      const snapshot = buildAppConfigSnapshot();
-      const currentHash = computeConfigHash(snapshot);
-      if (silent && currentHash === lastSyncedConfigHash) return true;
-
-      const sep = LIVE_ROSTER_SCRIPT_URL.includes('?') ? '&' : '?';
-      const url = LIVE_ROSTER_SCRIPT_URL + sep + 'action=saveConfig&fileName=cmt_app_config.json';
-
-      const resp = await fetch(url, {
-        method: 'POST',
-        redirect: 'follow',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({
-          action: 'saveConfig',
-          fileName: 'cmt_app_config.json',
-          config: snapshot
-        })
-      });
-
-      if (resp.ok) {
-        lastSyncedConfigHash = currentHash;
-        try {
-          localStorage.setItem(DRIVE_CONFIG_STORAGE_META_KEY, JSON.stringify({ updatedAt: snapshot.updatedAt }));
-        } catch (e) {}
+  function pushDriveJson(fileName, snapshot) {
+    const hash = JSON.stringify(snapshot, function(k, v) { return k === 'updatedAt' ? undefined : v; });
+    if (lastPushedHash[fileName] === hash) return pushChain[fileName] || Promise.resolve(true);
+    lastPushedHash[fileName] = hash;
+    const body = JSON.stringify({ action: 'saveConfig', fileName: fileName, config: snapshot });
+    pushChain[fileName] = (pushChain[fileName] || Promise.resolve()).then(async function() {
+      try {
+        const resp = await fetch(LIVE_ROSTER_SCRIPT_URL, {
+          method: 'POST', redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: body
+        });
+        const data = await resp.json();
+        if (!resp.ok || !data || data.status !== 'success') throw new Error('Save rejected');
+        setSyncStatus('☁️ Saved: ' + fileName, true);
         return true;
+      } catch (err) {
+        delete lastPushedHash[fileName];
+        setSyncStatus('⚠️ Drive save fail: ' + fileName + ' (Sync Config dabayein)', false);
+        return false;
       }
-      return false;
+    });
+    return pushChain[fileName];
+  }
+
+  // ---------- Common file ----------
+  function buildCommonSnapshot() {
+    const paper = Object.assign({}, commonRaw.pageLayoutConfig || {});
+    PAPER_KEYS.forEach(function(k) { if (pageLayoutConfig[k] !== undefined) paper[k] = pageLayoutConfig[k]; });
+    // Older shared fields are kept as they are: they seed a sequence file the first time it is created
+    return Object.assign({}, commonRaw, {
+      schemaVersion: 1,
+      configFileName: COMMON_CONFIG_FILE,
+      updatedAt: new Date().toISOString(),
+      pageLayoutConfig: paper,
+      pdaDirectory: pdaDirectory,
+      showPdaPhoneOption: showPdaPhoneOption,
+      showPdaStandbyOption: showPdaStandbyOption
+    });
+  }
+
+  function refreshLayoutUi() {
+    storeLocal('cmt_page_layout_cfg', pageLayoutConfig);
+    applyPageLayoutToCss();
+    applyToolbarVisibility();
+    applyTypographySettings();
+  }
+
+  function applyCommonConfig(cfg) {
+    PAPER_KEYS.forEach(function(k) {
+      if (cfg.pageLayoutConfig && cfg.pageLayoutConfig[k] !== undefined) pageLayoutConfig[k] = cfg.pageLayoutConfig[k];
+    });
+    if (Array.isArray(cfg.pdaDirectory) && cfg.pdaDirectory.length > 0) {
+      pdaDirectory = cfg.pdaDirectory;
+      storeLocal('cmt_pda_directory', pdaDirectory);
+    }
+    if (typeof cfg.showPdaPhoneOption === 'boolean') {
+      showPdaPhoneOption = cfg.showPdaPhoneOption;
+      const chk = document.getElementById('chkShowPdaPhone');
+      if (chk) chk.checked = showPdaPhoneOption;
+      document.body.classList.toggle('hide-pda-phone', !showPdaPhoneOption);
+      try { localStorage.setItem('cmt_show_pda_phone', String(showPdaPhoneOption)); } catch (e) {}
+    }
+    if (typeof cfg.showPdaStandbyOption === 'boolean') {
+      showPdaStandbyOption = cfg.showPdaStandbyOption;
+      const chk = document.getElementById('chkShowPdaStandby');
+      if (chk) chk.checked = showPdaStandbyOption;
+      try { localStorage.setItem('cmt_show_pda_standby', String(showPdaStandbyOption)); } catch (e) {}
+    }
+    refreshLayoutUi();
+    updatePdaStandbyFooter();
+  }
+
+  function loadCommonConfig() {
+    if (commonState === 'loading') return commonLoadPromise;
+    commonState = 'loading';
+    refreshSyncOverlay();
+    commonLoadPromise = (async function() {
+      try {
+        const cfg = await fetchDriveJson(COMMON_CONFIG_FILE);
+        if (cfg) {
+          commonRaw = cfg;
+          applyCommonConfig(cfg);
+        }
+        commonState = 'ready';
+        if (!cfg) pushDriveJson(COMMON_CONFIG_FILE, buildCommonSnapshot());
+      } catch (err) {
+        console.warn('Common config load failed:', err);
+        commonState = 'failed';
+        setSyncStatus('⚠️ Common settings load nahi hui: local mode (Drive save band)', false);
+      }
+      refreshSyncOverlay();
+    })();
+    return commonLoadPromise;
+  }
+
+  // ---------- Per-sequence file ----------
+  function getSeqSettings() {
+    const typography = {};
+    Object.keys(pageLayoutConfig).forEach(function(k) {
+      if (!PAPER_KEYS.includes(k)) typography[k] = pageLayoutConfig[k];
+    });
+    const jsb = {};
+    JSB_KEYS.forEach(function(k) { jsb[k] = jsbPermanentState[k] === undefined ? null : jsbPermanentState[k]; });
+    return copyJson({
+      typography: typography,
+      jsbPermanentState: jsb,
+      fixedCtoIds: fixedCtoIds,
+      enableCycleShuffle: enableCycleShuffle,
+      selectedAreas: selectedAreas
+    });
+  }
+
+  function applySeqSettings(s) {
+    if (!s) return;
+    const typo = s.typography || s.pageLayoutConfig;
+    if (typo) {
+      Object.keys(typo).forEach(function(k) { if (!PAPER_KEYS.includes(k)) pageLayoutConfig[k] = typo[k]; });
+      refreshLayoutUi();
+    }
+    if (s.jsbPermanentState) {
+      JSB_KEYS.forEach(function(k, i) {
+        jsbPermanentState[k] = s.jsbPermanentState[k] === undefined ? null : s.jsbPermanentState[k];
+        const el = document.getElementById(JSB_IDS[i]);
+        if (el && JSB_DEFAULT_HTML[i] !== null) el.innerHTML = JSB_DEFAULT_HTML[i];
+      });
+      storeLocal(JSB_PERMANENT_KEY, jsbPermanentState);
+      restoreJsbPermanentStateFromLocalStorage();
+    }
+    if (Array.isArray(s.fixedCtoIds)) {
+      fixedCtoIds = s.fixedCtoIds.map(function(x) { return String(x).trim().toUpperCase(); });
+      storeLocal('cmt_fixed_cto_ids', fixedCtoIds);
+    }
+    if (typeof s.enableCycleShuffle === 'boolean') {
+      enableCycleShuffle = s.enableCycleShuffle;
+      try { localStorage.setItem('cmt_enable_cycle_shuffle', String(enableCycleShuffle)); } catch (e) {}
+    }
+    if (Array.isArray(s.selectedAreas) && s.selectedAreas.length > 0) {
+      selectedAreas = s.selectedAreas.slice();
+      storeLocal('cmt_selected_areas', selectedAreas);
+      const btn = document.getElementById('btnFilterAreas');
+      if (btn) btn.innerText = '⚙️ Filter Areas (' + selectedAreas.length + ')';
+    }
+  }
+
+  function seqStaffIds(seq) {
+    return parsedRows.filter(function(r) { return normalizeSeq(r.seqNo) === seq && r.empId; })
+      .map(function(r) { return normalizeIdStr(r.empId); });
+  }
+
+  function buildSeqSnapshot(seq) {
+    const keys = Object.keys(keySeqMap).filter(function(k) {
+      return keySeqMap[k] === seq && (shiftSavedEdits[k] || staffSectionPrefsByShift[k] || staffManualFieldsByShift[k]);
+    }).sort(function(a, b) {
+      return (parseDateStrToMs(b.split('__')[0]) || 0) - (parseDateStrToMs(a.split('__')[0]) || 0);
+    }).slice(0, MAX_SYNC_SHEETS_PER_SEQ);
+    const allocation = { keys: keys, prefs: {}, manualFields: {}, savedEdits: {}, cycleHistory: {} };
+    keys.forEach(function(k) {
+      if (staffSectionPrefsByShift[k]) allocation.prefs[k] = staffSectionPrefsByShift[k];
+      if (staffManualFieldsByShift[k]) allocation.manualFields[k] = staffManualFieldsByShift[k];
+      if (shiftSavedEdits[k]) allocation.savedEdits[k] = shiftSavedEdits[k];
+    });
+    seqStaffIds(seq).forEach(function(id) {
+      if (cycleHistoryByEmp[id]) allocation.cycleHistory[id] = cycleHistoryByEmp[id];
+    });
+    return copyJson(Object.assign({
+      schemaVersion: 2,
+      configFileName: seqFileName(seq),
+      sequence: seq,
+      updatedAt: new Date().toISOString()
+    }, getSeqSettings(), { allocation: allocation }));
+  }
+
+  function storeAllocationMaps() {
+    savePrefsStorageLocalOnly();
+    storeLocal('cmt_shift_saved_edits', shiftSavedEdits);
+    storeLocal('cmt_cycle_history_by_emp', cycleHistoryByEmp);
+    storeLocal('cmt_key_seq_map', keySeqMap);
+  }
+
+  // The JSON replaces whatever this browser held for the same sequence
+  function applySeqAllocation(seq, a) {
+    if (!a) return;
+    Object.keys(keySeqMap).forEach(function(k) {
+      if (keySeqMap[k] !== seq) return;
+      delete staffSectionPrefsByShift[k];
+      delete staffManualFieldsByShift[k];
+      delete shiftSavedEdits[k];
+    });
+    (a.keys || []).forEach(function(k) {
+      keySeqMap[k] = seq;
+      delete staffSectionPrefsByShift[k];
+      delete staffManualFieldsByShift[k];
+      delete shiftSavedEdits[k];
+      if (a.prefs && a.prefs[k]) staffSectionPrefsByShift[k] = a.prefs[k];
+      if (a.manualFields && a.manualFields[k]) staffManualFieldsByShift[k] = a.manualFields[k];
+      if (a.savedEdits && a.savedEdits[k]) shiftSavedEdits[k] = a.savedEdits[k];
+    });
+    seqStaffIds(seq).forEach(function(id) { delete cycleHistoryByEmp[id]; });
+    Object.assign(cycleHistoryByEmp, a.cycleHistory || {});
+    storeAllocationMaps();
+  }
+
+  // Starting point for a sequence with no file/cache yet: app defaults + old shared settings (never another sequence's)
+  function legacySeed() {
+    return Object.assign({
+      jsbPermanentState: {},
+      fixedCtoIds: DEFAULT_FIXED_CTO_IDS.slice(),
+      enableCycleShuffle: true,
+      selectedAreas: DEFAULT_AREAS.slice()
+    }, commonRaw && commonRaw.fixedCtoIds ? commonRaw : {});
+  }
+
+  async function loadSeqConfig(seq) {
+    const token = ++seqLoadToken;
+    seqState = 'loading';
+    refreshSyncOverlay();
+    setSyncStatus('⏳ Sequence ' + seq + ' settings load ho rahi hain...', true);
+    await Promise.resolve();   // let the current generateSheet() finish first
+    if (commonState === 'idle') loadCommonConfig();
+    await commonLoadPromise;
+    try {
+      const cfg = await fetchDriveJson(seqFileName(seq));
+      if (token !== seqLoadToken) return;
+      if (cfg) {
+        applySeqSettings(cfg);
+        applySeqAllocation(seq, cfg.allocation);
+        lastPushedHash[seqFileName(seq)] = '';
+      } else {
+        // File not created yet: start from the old shared settings. Needs the common file to be readable.
+        if (commonState !== 'ready') throw new Error('Common config unavailable');
+        applySeqSettings(legacySeed());
+      }
+      generateSheet();          // still locked: render exactly what was loaded
+      seqState = 'ready';
+      storeLocal('cmt_seq_profile_' + seq, getSeqSettings());
+      setSyncStatus('✅ Sequence ' + seq + ' settings loaded', true);
+      if (!cfg) pushDriveJson(seqFileName(seq), buildSeqSnapshot(seq));
     } catch (err) {
-      console.warn('Drive Config Auto-Push error:', err);
-      return false;
+      if (token !== seqLoadToken) return;
+      console.warn('Sequence config load failed:', err);
+      seqState = 'failed';
+      setSyncStatus('⚠️ Sequence ' + seq + ' load nahi hui: local mode (Drive save band, Sync Config dabayein)', false);
+    }
+    refreshSyncOverlay();
+  }
+
+  function flushPendingConfigSave() {
+    clearTimeout(driveConfigSyncTimer);
+    const jobs = [];
+    if (commonState === 'ready') jobs.push(pushDriveJson(COMMON_CONFIG_FILE, buildCommonSnapshot()));
+    if (activeSeq && seqState === 'ready') {
+      storeLocal('cmt_seq_profile_' + activeSeq, getSeqSettings());
+      jobs.push(pushDriveJson(seqFileName(activeSeq), buildSeqSnapshot(activeSeq)));
+    }
+    return Promise.all(jobs);
+  }
+
+  // Called at the start of generateSheet(): switches settings when the sheet belongs to another sequence
+  function activateSequence(seq) {
+    if (!seq) {
+      if (activeSeq) { flushPendingConfigSave(); activeSeq = ''; seqState = 'idle'; seqLoadToken++; refreshSyncOverlay(); }
+      return;
+    }
+    const key = getCurrentDateShiftKey();
+    if (seq !== activeSeq) {
+      flushPendingConfigSave();
+      clearTimeout(autoSaveTimer);
+      activeSeq = seq;
+      seqState = 'loading';
+      let cached = null;
+      try { cached = JSON.parse(localStorage.getItem('cmt_seq_profile_' + seq) || 'null'); } catch (e) {}
+      applySeqSettings(cached || (commonState === 'ready' ? legacySeed() : null));
+      loadSeqConfig(seq);
+    }
+    if (key && !key.startsWith('MANUAL_DRAFT')) {
+      keySeqMap[key] = seq;
+      storeLocal('cmt_key_seq_map', keySeqMap);
     }
   }
 
   function scheduleDriveConfigAutoPush() {
     clearTimeout(driveConfigSyncTimer);
-    driveConfigSyncTimer = setTimeout(function() {
-      pushDriveConfigToGoogleDrive(true);
-    }, 1500);
+    driveConfigSyncTimer = setTimeout(flushPendingConfigSave, 1500);
+  }
+
+  async function pullDriveConfigFromGoogleDrive() {
+    if (isConfigLoading()) return false;
+    await flushPendingConfigSave();     // send unsaved changes first, then reload
+    await loadCommonConfig();
+    if (activeSeq) await loadSeqConfig(activeSeq);
+    else if (parsedRows.length > 0) generateSheet();
+    return commonState === 'ready';
   }
 
   async function manualSyncDriveConfigNow() {
-    const st = document.getElementById('statusText');
-    if (st) st.innerText = '☁️ Syncing App Config (cmt_app_config.json) with Google Drive...';
-    const pushed = await pushDriveConfigToGoogleDrive(false);
-    const pulled = await pullDriveConfigFromGoogleDrive(false);
-    if (st) {
-      st.style.color = (pushed || pulled) ? '#0f766e' : '#b45309';
-      st.innerText = (pushed || pulled)
-        ? '✅ Google Drive Config (cmt_app_config.json) Synced! (Page Layout, Typography, JSB Text, Fixed CTO & PDA List)'
-        : '⚠️ Local Config Saved (Deploy updated Apps Script code to enable Drive JSON sync)';
-    }
+    await pullDriveConfigFromGoogleDrive();
   }
 
   let hasBootedCmtApp = false;
@@ -8570,6 +8826,7 @@
     if (hasBootedCmtApp) return;
     hasBootedCmtApp = true;
 
+    loadCommonConfig();   // Drive settings first; saving stays locked until they are loaded
     isRestoringRosterFromStorage = true;
     const initialLiveInfo = getCurrentLiveShiftAndDate();
     const hasActiveTabSession = !!(tabSessionState && (tabSessionState.dateOnly || tabSessionState.shiftChoice));
@@ -8654,7 +8911,6 @@
     applyTypographySettings();
     restoreJsbPermanentStateFromLocalStorage();
     autoSyncSafetyTopics(false);
-    pullDriveConfigFromGoogleDrive(true);
     saveActiveSessionState();
     updatePdaStandbyFooter();
     autoFitJsbFormPage();
