@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CMT Daily Shift Allocation Generator (v97.5 - Rich Formatting Toolbar & Toggleable Layout)</title>
+<title>CMT Daily Shift Allocation Generator (v98.0 - Rich Formatting Toolbar & Toggleable Layout)</title>
 <!-- SheetJS (XLSX) CDN with fallback -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
@@ -1339,7 +1339,14 @@
     box-shadow: 0 6px 18px rgba(0,0,0,0.22);
   }
   .rich-format-toolbar.rtb-floating-visible { display: flex; }
+  .rtb-drag-handle {
+    cursor: move; touch-action: none; user-select: none; align-self: stretch; display: flex; align-items: center;
+    padding: 4px 8px; border-radius: 6px; background: #1e3a8a; color: #fff; font: 700 12px sans-serif;
+  }
 
+</style>
+<style>
+  #ldrcto_body td:nth-child(6) { color: transparent !important; }
 </style>
 </head>
 <body>
@@ -1349,7 +1356,7 @@
     <div class="live-loader-card">
       <div class="loader-icon-spin">🔄</div>
       <h3 class="live-loader-title" id="liveLoaderTitle">Live Roster Syncing...</h3>
-      <div class="live-loader-sub" id="liveLoaderSub">Fetching latest roster from Google Drive...</div>
+      <div class="live-loader-sub" id="liveLoaderSub">Fetching latest roster...</div>
       <div class="progress-track-outer">
         <div class="progress-fill-inner" id="liveProgressFill"></div>
       </div>
@@ -1367,7 +1374,7 @@
       <div class="control-item">
         <label>1. Live Roster / Upload Excel</label>
         <div style="display:flex; gap:6px; align-items:center;">
-          <select id="liveFileSelect" style="display:none; max-width:190px; background:#064e3b; color:#ecfdf5; border-color:#10b981; font-weight:700;" onchange="switchActiveRosterFileAndDate(this.value, '', NaN)" title="Available Live Monthly Rosters in Google Drive"></select>
+          <select id="liveFileSelect" style="display:none; max-width:190px; background:#064e3b; color:#ecfdf5; border-color:#10b981; font-weight:700;" onchange="switchActiveRosterFileAndDate(this.value, '', NaN)" title="Available Live Monthly Rosters"></select>
           <button type="button" class="btn-success" id="btnSyncLiveRoster" style="background:#059669; white-space:nowrap;" onclick="fetchLiveRosterFromUrl(true); autoSyncSafetyTopics(); pullDriveConfigFromGoogleDrive(true);" title="Load latest data from Google Apps Script Live Roster">🔄 Sync Live Roster</button>
           <input type="file" id="excelFile" accept=".xlsx, .xls, .csv" style="max-width:185px;" title="Manual Excel/CSV fallback upload" />
         </div>
@@ -1400,7 +1407,7 @@
       </div>
 
       <div style="margin-left:auto; display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.22); border-radius:6px; padding:6px 12px; line-height:1.35;">
-        <div style="background:#2563eb; color:#ffffff; border:1px solid #60a5fa; border-radius:5px; padding:4px 9px; font-size:12px; font-weight:800; letter-spacing:0.6px; box-shadow:0 1px 3px rgba(0,0,0,0.25);">v97.5</div>
+        <div style="background:#2563eb; color:#ffffff; border:1px solid #60a5fa; border-radius:5px; padding:4px 9px; font-size:12px; font-weight:800; letter-spacing:0.6px; box-shadow:0 1px 3px rgba(0,0,0,0.25);">v98.0</div>
         <div style="text-align:right;">
           <div style="font-size:10px; text-transform:uppercase; letter-spacing:0.8px; color:#cbd5e1; font-weight:600;">Created by</div>
           <div style="font-size:13px; font-weight:800; color:#facc15; letter-spacing:0.4px;">ADEEL ASGHAR (497038)</div>
@@ -1415,7 +1422,7 @@
       <button type="button" class="btn-secondary" style="background:#b45309;" onclick="openPageLayoutModal()">📐 Page Layout</button>
       <button type="button" class="btn-success" style="background:#0d9488;" onclick="exportToExcel()" title="Export Allocation Sheet only to Excel">📊 Export Allocation (Excel)</button>
       <button type="button" class="btn-success" style="background:#1d4ed8;" onclick="exportJsbToWord()" title="Export Job Safety Briefing & Signature Sheet in exact MS Word format">📄 Export JSB (Word)</button>
-      <button type="button" class="btn-secondary" style="background:#0f766e;" id="btnSyncDriveConfig" onclick="manualSyncDriveConfigNow()" title="Save changes, then reload settings from Google Drive (common file + this sequence file)">☁️ Sync Config</button>
+      <button type="button" class="btn-secondary" style="background:#0f766e;" id="btnSyncDriveConfig" onclick="manualSyncDriveConfigNow()" title="Save changes, then reload settings (common file + this sequence file)">☁️ Sync Config</button>
       <button type="button" class="btn-success" onclick="printSinglePageA4()">🖨️ Print / Save PDF</button>
     </div>
   </div>
@@ -1844,6 +1851,7 @@
             </tr>
           </thead>
           <tbody id="cto_body"></tbody>
+          <tbody id="ldrcto_body"></tbody>
         </table>
       </div>
 
@@ -1884,26 +1892,6 @@
             </tr>
           </thead>
           <tbody id="ldr2_body"></tbody>
-        </table>
-      </div>
-
-      <!-- CTO LOADERS -->
-      <div class="section-block">
-        <div class="section-header"><span class="section-header-text">CTO LOADERS</span></div>
-        <table class="alloc-table">
-          <thead>
-            <tr>
-              <th class="col-no">No</th>
-              <th class="col-id">Staff ID</th>
-              <th class="col-name">Name</th>
-              <th class="col-title">TITLE</th>
-              <th class="col-comp">COMPANY</th>
-              <th class="col-loc">LOCATIONS</th>
-              <th class="col-rem">Remarks</th>
-              <th class="col-time">Timing</th>
-            </tr>
-          </thead>
-          <tbody id="ldrcto_body"></tbody>
         </table>
       </div>
 
@@ -2318,19 +2306,16 @@
     };
   }
 
-  // Fixed CTO applies on regular (non-OT) duty in the person's OWN sequence (any sequence, not only 2).
-  // If the roster has no sequence for this person, the tick is honoured.
-  function isOwnSeqRegularDuty(person, sheetSeq) {
-    if (!person || person.isOT) return false;
-    const own = String(person.seqNo || '').trim().toUpperCase();
-    return !own || own === String(sheetSeq || '').trim().toUpperCase();
+  // Fixed CTO applies to ticked staff on regular (non-OT) duty. The tick list is already saved per sequence.
+  function isRegularDuty(person) {
+    return !!person && !person.isOT;
   }
 
   // Determine expected section for a 3x3 regular staff member using BOTH Excel roster columns (3 days off -> next cycle auto-switch) AND saved cycle history
-  function resolveSectionFromCycleHistory(empId, targetDateStr, isOwnSeqRegular, personObj, targetColIdx) {
+  function resolveSectionFromCycleHistory(empId, targetDateStr, isRegular, personObj, targetColIdx) {
     if (!empId) return null;
     const cleanId = normalizeIdStr(empId);
-    if (fixedCtoIds.includes(cleanId.toUpperCase()) && isOwnSeqRegular) {
+    if (fixedCtoIds.includes(cleanId.toUpperCase()) && isRegular) {
       return 'CTO';
     }
     if (!enableCycleShuffle) return null;
@@ -2536,13 +2521,17 @@
 
   let pendingCtoChangedIds = [];
 
-  // Move only the rows whose Fixed CTO tick changed inside the saved layout; all other manual edits stay.
+  // Move ticked (Fixed CTO) and just-unticked rows inside the saved layout; all other manual edits stay.
   function applyCtoTickChangesToSavedEdits(key, generated) {
-    const ids = pendingCtoChangedIds;
+    const changed = pendingCtoChangedIds;
     pendingCtoChangedIds = [];
     const saved = key && shiftSavedEdits[key];
-    if (!ids.length || !saved || !saved.tables) return;
+    if (!saved || !saved.tables) return;
     const upper = function(v) { return normalizeIdStr(v).toUpperCase(); };
+    const fixedInCto = (generated.cto_body || []).concat(generated.ldrcto_body || [])
+      .map(function(p) { return upper(p.empId); })
+      .filter(function(id) { return fixedCtoIds.includes(id); });
+    const ids = Array.from(new Set(changed.concat(fixedInCto)));
     ids.forEach(function(id) {
       const target = Object.keys(generated).find(function(tb) {
         return generated[tb].some(function(p) { return upper(p.empId) === id; });
@@ -2569,9 +2558,9 @@
     syncManualFieldsFromDom();
     captureCurrentDateShiftEdits();
     fixedCtoIds = Array.from(checks).map(function(c) { return String(c.value).trim().toUpperCase(); });
-    pendingCtoChangedIds = fixedCtoIds.filter(function(x) { return !before.includes(x); })
-      .concat(before.filter(function(x) { return !fixedCtoIds.includes(x); }));
-    // A new tick/untick replaces any earlier manual section pin for that person on this date + shift
+    // Everyone ticked now, plus everyone just unticked
+    pendingCtoChangedIds = fixedCtoIds.concat(before.filter(function(x) { return !fixedCtoIds.includes(x); }));
+    // Save & Apply replaces any earlier manual section pin for that person on this date + shift
     const prefs = getPrefsForCurrentDateShift();
     Object.keys(prefs).forEach(function(id) {
       if (prefs[id] !== 'SHORTAGE' && pendingCtoChangedIds.includes(normalizeIdStr(id).toUpperCase())) delete prefs[id];
@@ -2579,9 +2568,8 @@
     savePrefsStorage();
     saveCycleRulesStorage();
     document.getElementById('ctoCycleModal').style.display = 'none';
-    const hadChanges = pendingCtoChangedIds.length > 0;
     generateSheet();
-    if (hadChanges) recalculateAllTablesAndJsb(false);
+    recalculateAllTablesAndJsb(false);
   }
 
   function clearCycleHistoryMemory() {
@@ -4862,9 +4850,9 @@
         if (pref === 'CTO') { cto.push(p); return; }
         if (pref === 'CMT-1') { cmt1.push(p); return; }
 
-        // Fixed CTO rule: ticked staff stay in CTO on their own sequence's regular duty; on OT or another sequence they go to CMT-1 or CMT-2
-        const isOwnSeqRegular = isOwnSeqRegularDuty(p, displaySeq);
-        if (fixedCtoIds.includes(String(p.empId || '').trim().toUpperCase()) && isOwnSeqRegular) {
+        // Fixed CTO rule: ticked staff go to CTO on regular duty; on OT they go to CMT-1 or CMT-2
+        const isRegular = isRegularDuty(p);
+        if (fixedCtoIds.includes(String(p.empId || '').trim().toUpperCase()) && isRegular) {
           cto.push(p);
           return;
         }
@@ -4888,7 +4876,7 @@
         }
 
         // Check 3x3 / 6-day cycle history for EO (same 3-day cycle = keep side, after 3-day off gap = auto-switch CMT-1 <-> CMT-2)
-        const cycleSide = resolveSectionFromCycleHistory(p.empId, activeDateStr, isOwnSeqRegular, p, colIdx);
+        const cycleSide = resolveSectionFromCycleHistory(p.empId, activeDateStr, isRegular, p, colIdx);
         if (cycleSide === 'CMT-1') {
           cmt1.push(p);
           return;
@@ -5118,9 +5106,9 @@
     remainingForCmt.forEach(function(p) {
       const cycleInfo = detectLoaderCycleInfo(p, colIdx, shiftChoice);
       const ldrPat = detectStaffRosterPattern(p, colIdx);
-      const isOwnSeqRegLdr = isOwnSeqRegularDuty(p, displaySeq);
+      const isRegularLdr = isRegularDuty(p);
       const ldrCycleSwitchSide = (ldrPat.pattern === '3x3' && !p.isOT)
-        ? resolveSectionFromCycleHistory(p.empId, activeDateStr, isOwnSeqRegLdr, p, colIdx)
+        ? resolveSectionFromCycleHistory(p.empId, activeDateStr, isRegularLdr, p, colIdx)
         : null;
 
       if (cycleInfo) {
@@ -5192,11 +5180,11 @@
 
     renderStaffTable('cmt1_body', cmt1, 'CMT-1', 8);
     renderStaffTable('cmt2_body', cmt2, 'CMT-2', 7);
-    renderStaffTable('cto_body', cto, 'CTO', 2);
+    renderStaffTable('cto_body', cto, 'CTO', ldrCto.length ? 0 : 2);
 
     renderLoaderTable('ldr1_body', ldr1, 'CMT-1', 5);
     renderLoaderTable('ldr2_body', ldr2, 'CMT-2', 5);
-    renderLoaderTable('ldrcto_body', ldrCto, 'CTO', 2);
+    renderLoaderTable('ldrcto_body', ldrCto, 'CTO', 0);
 
     renderShortageTable('shortage_body', shortageList, 5);
     ensureDeleteButtonsOnAllRows();
@@ -5224,6 +5212,7 @@
       ldr1_body: ldr1, ldr2_body: ldr2, ldrcto_body: ldrCto
     });
     const hasSavedEdits = dsKey && applySavedEditsIfPresent(dsKey);
+    tidyCtoBlankRows();
 
     // Record non-OT regular staff placements into Cycle History Memory so next cycle auto-flips!
     if (activeDateStr) {
@@ -5338,11 +5327,32 @@
     });
 
     // Render EO rows with separate 1, 2, 3... (plus blank rows up to minRows)
-    const minEoRows = Math.max(eoItems.length, Math.max(1, minRows - aaItems.length));
+    const minEoRows = Math.max(eoItems.length, minRows > 0 ? Math.max(1, minRows - aaItems.length) : 0);
     for (let i = 0; i < minEoRows; i++) {
       tbody.appendChild(buildStaffRow(eoItems[i] || null, i + 1));
     }
   }
+
+  // CTO staff and CTO loaders share one table: keep column spans right and remove spare blank rows
+  function alignCtoLoaderCells() {
+    ['ldr1_body', 'ldr2_body', 'ldrcto_body'].forEach(function(id) {
+      document.querySelectorAll('#' + id + ' tr').forEach(function(tr) {
+        const cell = tr.cells[5];
+        const span = id === 'ldrcto_body' ? 2 : 1;
+        if (cell && cell.colSpan !== span) cell.colSpan = span;
+      });
+    });
+  }
+
+  function tidyCtoBlankRows() {
+    const rows = Array.from(document.querySelectorAll('#cto_body tr, #ldrcto_body tr'));
+    const isBlank = function(tr) { return !cleanCellVal(tr.cells[1]) && !cleanCellVal(tr.cells[2]); };
+    if (rows.some(function(tr) { return !isBlank(tr); })) {
+      rows.filter(isBlank).forEach(function(tr) { tr.remove(); });
+    }
+  }
+
+  new MutationObserver(alignCtoLoaderCells).observe(document.getElementById('printableSheet'), { childList: true, subtree: true });
 
   function renderLoaderTable(tbodyId, list, locLabel, minRows) {
     const tbody = document.getElementById(tbodyId);
@@ -5535,6 +5545,7 @@
           deduplicateStaffAcrossTables(rowToInsert);
         }
         // Re-sort by timing sequence & renumber AA/EO cleanly
+        tidyCtoBlankRows();
         recalculateAllTablesAndJsb(true);
         return;
       }
@@ -5773,7 +5784,7 @@
     renderStaffTable('cto_body', [], 'CTO', 2);
     renderLoaderTable('ldr1_body', [], 'CMT-1', 5);
     renderLoaderTable('ldr2_body', [], 'CMT-2', 5);
-    renderLoaderTable('ldrcto_body', [], 'CTO', 2);
+    renderLoaderTable('ldrcto_body', [], 'CTO', 0);
     renderShortageTable('shortage_body', [], 5);
     ensureDeleteButtonsOnAllRows();
   }
@@ -6104,7 +6115,7 @@
   function execRichCmd(cmd, val) {
     const targetEl = ensureEditableFocusForToolbar();
     if (!targetEl) {
-      alert('Pehle sheet ya JSB ke kisi editable box/cell par click karein.');
+      alert('Please click an editable box/cell on the sheet or JSB first.');
       return;
     }
     try {
@@ -6125,7 +6136,7 @@
     if (!pxSize) return;
     const targetEl = ensureEditableFocusForToolbar();
     if (!targetEl) {
-      alert('Pehle sheet ya JSB ke kisi editable box/cell par click karein.');
+      alert('Please click an editable box/cell on the sheet or JSB first.');
       document.getElementById('rtbFontSize').value = '';
       return;
     }
@@ -6312,8 +6323,10 @@
     '</Row>';
 
     function appendXmlSection(secTitle, headers, tbodyId, colSpans) {
+      // CTO loaders are listed directly under CTO staff, without their own headers
+      const withHeader = tbodyId !== 'ldrcto_body';
       // Section Header (#D9D9D9)
-      rowsXml += '<Row ss:Height="17">' + makeCell(secTitle, 'sSecHdr', 8) + '</Row>';
+      if (withHeader) rowsXml += '<Row ss:Height="17">' + makeCell(secTitle, 'sSecHdr', 8) + '</Row>';
 
       // Column Headers (#EDEDED)
       let hdrCells = '';
@@ -6321,7 +6334,7 @@
         const span = colSpans ? colSpans[idx] : 1;
         hdrCells += makeCell(h, 'sColHdr', span - 1);
       });
-      rowsXml += '<Row ss:Height="17">' + hdrCells + '</Row>';
+      if (withHeader) rowsXml += '<Row ss:Height="17">' + hdrCells + '</Row>';
 
       // Data Rows
       const tbody = document.getElementById(tbodyId);
@@ -6331,7 +6344,7 @@
         const isAaRow = tr.classList.contains('aa-highlight-row') || (tds[3] && extractCellText(tds[3]).toUpperCase() === 'AA' && extractCellText(tds[2]) !== '');
         tds.forEach(function(td, idx) {
           const span = colSpans ? colSpans[idx] : 1;
-          const txt = extractCellText(td);
+          const txt = (!withHeader && idx === 5) ? '' : extractCellText(td);
           const isNameCol = (idx === 2);
           const isNumCol = (idx === 0 && txt !== '' && !isNaN(Number(txt)));
           const st = isAaRow ? (isNameCol ? 'sAaLeft' : 'sAaCenter') : (isNameCol ? 'sDataLeft' : 'sDataCenter');
@@ -6344,10 +6357,10 @@
     appendXmlSection('CMT-1', ['No', 'Staff ID', 'Name', 'TITLE', 'COMPANY', 'PDA', 'TTR', 'Remarks', 'Timing'], 'cmt1_body', null);
     appendXmlSection('CMT-2', ['No', 'Staff ID', 'Name', 'TITLE', 'COMPANY', 'PDA', 'TTR', 'Remarks', 'Timing'], 'cmt2_body', null);
     appendXmlSection('CTO', ['No', 'Staff ID', 'Name', 'TITLE', 'COMPANY', 'PDA', 'TTR', 'Remarks', 'Timing'], 'cto_body', null);
+    appendXmlSection('CTO LOADERS', ['No', 'Staff ID', 'Name', 'TITLE', 'COMPANY', 'LOCATIONS', 'Remarks', 'Timing'], 'ldrcto_body', [1, 1, 1, 1, 1, 2, 1, 1]);
 
     appendXmlSection('CMT-1 LOADERS', ['No', 'Staff ID', 'Name', 'TITLE', 'COMPANY', 'LOCATIONS', 'Remarks', 'Timing'], 'ldr1_body', [1, 1, 1, 1, 1, 2, 1, 1]);
     appendXmlSection('CMT-2 LOADERS', ['No', 'Staff ID', 'Name', 'TITLE', 'COMPANY', 'LOCATIONS', 'Remarks', 'Timing'], 'ldr2_body', [1, 1, 1, 1, 1, 2, 1, 1]);
-    appendXmlSection('CTO LOADERS', ['No', 'Staff ID', 'Name', 'TITLE', 'COMPANY', 'LOCATIONS', 'Remarks', 'Timing'], 'ldrcto_body', [1, 1, 1, 1, 1, 2, 1, 1]);
 
     appendXmlSection('SHORTAGE', ['No', 'Staff ID', 'NAME', 'TITLE', 'COMPANY', 'REMARKS', 'Timing'], 'shortage_body', [1, 1, 1, 1, 1, 3, 1]);
 
@@ -7160,12 +7173,24 @@
         e.preventDefault();
         tb.classList.remove('drag-over-tbody');
         const sourceParent = draggedTr.parentElement;
-        const convertedRow = convertRowForTargetTbody(draggedTr, id);
-        tb.appendChild(convertedRow);
+        let targetId = id;
+        if (id === 'cto_body' || id === 'ldrcto_body') {
+          targetId = cleanCellVal(draggedTr.cells[3]).toUpperCase() === 'LDR' ? 'ldrcto_body' : 'cto_body';
+        }
+        const convertedRow = convertRowForTargetTbody(draggedTr, targetId);
+        document.getElementById(targetId).appendChild(convertedRow);
         if (convertedRow !== draggedTr && sourceParent) {
           sourceParent.removeChild(draggedTr);
         }
         deduplicateStaffAcrossTables(convertedRow);
+        const droppedId = normalizeIdStr(cleanCellVal(convertedRow.cells[1]));
+        if (droppedId) {
+          const sections = { cmt1_body: 'CMT-1', ldr1_body: 'CMT-1', cmt2_body: 'CMT-2', ldr2_body: 'CMT-2',
+                             cto_body: 'CTO', ldrcto_body: 'CTO', shortage_body: 'SHORTAGE' };
+          getPrefsForCurrentDateShift()[droppedId] = sections[targetId];
+          savePrefsStorage();
+        }
+        tidyCtoBlankRows();
         recalculateAllTablesAndJsb();
       });
     });
@@ -8180,13 +8205,13 @@
         syncBtn.innerText = '⏳ Syncing...';
       }
       if (statusEl) {
-        statusEl.innerText = '🌐 Fetching Live Google Drive Roster...';
+        statusEl.innerText = '🌐 Fetching Live Roster...';
       }
       currentProgressVal = 12;
       showLiveProgressBar(
         'Live Roster Loading...',
-        'Fetching latest roster from Google Drive...',
-        'Step 1/4: Connecting to Google Drive...',
+        'Fetching latest roster...',
+        'Step 1/4: Connecting...',
         18
       );
     }
@@ -8498,7 +8523,7 @@
       ov.id = 'cmtSyncOverlay';
       ov.className = 'cmt-sync-ui';
       ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;color:#fff;font:700 16px sans-serif;text-align:center;padding:20px;';
-      ov.textContent = '☁️ Settings Google Drive se load ho rahi hain...';
+      ov.textContent = '⏳ Loading config...';
       document.body.appendChild(ov);
     }
     const busy = isConfigLoading();
@@ -8536,11 +8561,11 @@
         });
         const data = await resp.json();
         if (!resp.ok || !data || data.status !== 'success') throw new Error('Save rejected');
-        setSyncStatus('☁️ Saved: ' + fileName, true);
+        setSyncStatus('✅ Config Saved', true);
         return true;
       } catch (err) {
         delete lastPushedHash[fileName];
-        setSyncStatus('⚠️ Drive save fail: ' + fileName + ' (Sync Config dabayein)', false);
+        setSyncStatus('⚠️ Config save failed (press Sync Config)', false);
         return false;
       }
     });
@@ -8611,7 +8636,7 @@
       } catch (err) {
         console.warn('Common config load failed:', err);
         commonState = 'failed';
-        setSyncStatus('⚠️ Common settings load nahi hui: local mode (Drive save band)', false);
+        setSyncStatus('⚠️ Config failed to load: saving is off (press Sync Config)', false);
       }
       refreshSyncOverlay();
     })();
@@ -8739,7 +8764,7 @@
     const token = ++seqLoadToken;
     seqState = 'loading';
     refreshSyncOverlay();
-    setSyncStatus('⏳ Sequence ' + seq + ' settings load ho rahi hain...', true);
+    setSyncStatus('⏳ Loading config...', true);
     await Promise.resolve();   // let the current generateSheet() finish first
     if (commonState === 'idle') loadCommonConfig();
     await commonLoadPromise;
@@ -8758,13 +8783,13 @@
       generateSheet();          // still locked: render exactly what was loaded
       seqState = 'ready';
       storeLocal('cmt_seq_profile_' + seq, getSeqSettings());
-      setSyncStatus('✅ Sequence ' + seq + ' settings loaded', true);
+      setSyncStatus('✅ Config Loaded', true);
       if (!cfg) pushDriveJson(seqFileName(seq), buildSeqSnapshot(seq));
     } catch (err) {
       if (token !== seqLoadToken) return;
       console.warn('Sequence config load failed:', err);
       seqState = 'failed';
-      setSyncStatus('⚠️ Sequence ' + seq + ' load nahi hui: local mode (Drive save band, Sync Config dabayein)', false);
+      setSyncStatus('⚠️ Config failed to load: saving is off (press Sync Config)', false);
     }
     refreshSyncOverlay();
   }
@@ -8888,7 +8913,7 @@
     } else {
       showLiveProgressBar(
         'Live Roster Loading...',
-        '6 hours elapsed — fetching latest roster from Google Drive...',
+        '6 hours elapsed — fetching latest roster...',
         'Step 1/4: Initializing...',
         12
       );
@@ -8935,7 +8960,7 @@
   });
 
 const SAFETY_TOPICS_API = "https://script.google.com/macros/s/AKfycbwUEBGVGTd2_aimbYwMkCJqkIeofF994E16lSAO64B0b7RySudxyHo63TgVs_osVNLDfw/exec";
-// Agar aap direct Google Drive JSON file ID use karna chahein to yahan dalein (optional):
+// Optional: put a Google Drive JSON file ID here to read the file directly:
 const DRIVE_TOPICS_JSON_FILE_ID = "";
 
 function applySyncedSafetyTopics(data, forceOverwrite) {
@@ -8980,7 +9005,7 @@ async function fetchJsonFromGoogleDriveFile(fileId) {
   if (!fileId) return null;
   const directUrl = "https://drive.google.com/uc?export=download&id=" + encodeURIComponent(fileId) + "&_t=" + Date.now();
   const resp = await fetch(directUrl, { cache: "no-store" });
-  if (!resp.ok) throw new Error("Drive JSON fetch failed: " + resp.status);
+  if (!resp.ok) throw new Error("Config fetch failed: " + resp.status);
   return await resp.json();
 }
 
@@ -9069,7 +9094,7 @@ setInterval(function() { autoSyncSafetyTopics(false); }, 1800000);
         var idTd = tr.cells[1], nmTd = tr.cells[2];
         var idTxt = idTd ? idTd.innerText.trim() : '';
         var nmTxt = nmTd ? nmTd.innerText.replace(/\s+/g, ' ').trim() : '';
-        if ((idTxt || nmTxt) && !confirm('Is row ko delete karna hai?\n' + idTxt + ' ' + nmTxt)) return;
+        if ((idTxt || nmTxt) && !confirm('Delete this row?\n' + idTxt + ' ' + nmTxt)) return;
         if (typeof removeStaffRow === 'function') removeStaffRow(tr); else tr.remove();
       });
       document.body.appendChild(xBtn);
@@ -9102,10 +9127,54 @@ setInterval(function() { autoSyncSafetyTopics(false); }, 1800000);
     if (!tb) return;
     document.body.appendChild(tb);
     var curEl = null;
+    var POS_KEY = 'cmt_format_toolbar_pos';
+    var userPos = null;
+    try { userPos = JSON.parse(localStorage.getItem(POS_KEY) || 'null'); } catch (e) {}
+
+    // Drag handle: drag to move the toolbar, double-click to return to automatic placement
+    var grip = document.createElement('div');
+    grip.className = 'rtb-drag-handle';
+    grip.title = 'Drag to move. Double-click to reset.';
+    grip.textContent = '✥ Move';
+    tb.insertBefore(grip, tb.firstChild);
+
+    function setPos(left, top) {
+      left = Math.max(0, Math.min(left, window.innerWidth - tb.offsetWidth));
+      top = Math.max(0, Math.min(top, window.innerHeight - tb.offsetHeight));
+      tb.style.left = left + 'px';
+      tb.style.top = top + 'px';
+      return { left: left, top: top };
+    }
+
+    var drag = null;
+    grip.addEventListener('pointerdown', function(e) {
+      e.preventDefault();   // keep the cursor and selection inside the edited cell
+      var r = tb.getBoundingClientRect();
+      drag = { dx: e.clientX - r.left, dy: e.clientY - r.top };
+      grip.setPointerCapture(e.pointerId);
+    });
+    grip.addEventListener('mousedown', function(e) { e.preventDefault(); });
+    grip.addEventListener('pointermove', function(e) {
+      if (drag) userPos = setPos(e.clientX - drag.dx, e.clientY - drag.dy);
+    });
+    function endDrag() {
+      if (!drag) return;
+      drag = null;
+      try { localStorage.setItem(POS_KEY, JSON.stringify(userPos)); } catch (e) {}
+    }
+    grip.addEventListener('pointerup', endDrag);
+    grip.addEventListener('pointercancel', endDrag);
+    grip.addEventListener('dblclick', function() {
+      userPos = null;
+      try { localStorage.removeItem(POS_KEY); } catch (e) {}
+      placeTb();
+    });
+
     function hideTb() { tb.classList.remove('rtb-floating-visible'); curEl = null; }
     function placeTb() {
       if (!curEl || !document.body.contains(curEl)) { hideTb(); return; }
       tb.classList.add('rtb-floating-visible');
+      if (userPos) { setPos(userPos.left, userPos.top); return; }
       var r = curEl.getBoundingClientRect();
       var h = tb.offsetHeight, w = tb.offsetWidth;
       var top = r.top - h - 6;
